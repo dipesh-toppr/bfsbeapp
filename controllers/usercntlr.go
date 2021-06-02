@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/dipesh-toppr/bfsbeapp/models"
+	"github.com/dipesh-toppr/bfsbeapp/token"
 )
 
 // Signup allows the user to create an account.
@@ -26,8 +27,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(u)
 		fmt.Println("SignUp Successfully")
 
+		// add token to cookies
+		token.Createtoken(u, w)
+		w.WriteHeader(http.StatusOK)
+
 		// redirect
-		http.Redirect(w, r, "/", http.StatusOK)
+		// http.Redirect(w, r, "/", http.StatusOK)
 		return
 	}
 }
@@ -57,7 +62,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		fmt.Println("Logined Successfully")
-		http.Redirect(w, r, "/", http.StatusOK)
+
+		// add token to cookies
+		token.Createtoken(u, w)
+		w.WriteHeader(http.StatusOK)
+
+		// http.Redirect(w, r, "/", http.StatusOK)
 		return
 	}
 
@@ -68,7 +78,9 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		fmt.Println("LogOut Successfully")
-		http.Redirect(w, r, "/", http.StatusOK)
+		w.WriteHeader(http.StatusOK)
+
+		// http.Redirect(w, r, "/", http.StatusOK)
 	}
 
 }
