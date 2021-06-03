@@ -50,14 +50,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		// check if the user exists
 		u, ok := models.FindUser(e)
 		if !ok {
-			http.Error(w, "username and/or password do not match", http.StatusForbidden)
+			http.Error(w, "username does not exits", http.StatusForbidden)
 			fmt.Println("Logined Failed")
 			return
 		}
 
-		d, _ := models.IsDisabled(u)
-		if !d {
-			fmt.Println("User is disabled by admin")
+		d, err := models.IsDisabled(u)
+		if d {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			fmt.Println("user is disabled by admin")
 			return
 		}
 

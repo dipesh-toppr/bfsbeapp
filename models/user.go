@@ -74,7 +74,7 @@ func validateUserForm(r *http.Request) (User, error) {
 	u.Lastname = l
 	u.Password = p
 	u.Identity = i
-	u.Isdisabled = "1"
+	u.Isdisabled = "0"
 
 	return u, nil
 
@@ -108,7 +108,7 @@ func FindUser(email string) (User, bool) {
 
 func IsDisabled(u User) (bool, error) {
 
-	if u.Isdisabled != "1" {
+	if u.Isdisabled == "1" {
 		return true, errors.New("User is disabled  by admin")
 	}
 

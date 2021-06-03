@@ -2,8 +2,8 @@
 
 -- # psql -U postgres
 -- # postgres
--- # CREATE DATABASE users;
--- \c users; 
+-- # CREATE DATABASE bfsbedata;
+-- \c bfsbedata; 
 
 -- Table: users
 
@@ -14,7 +14,7 @@ create table users
   id serial,
   firstname character varying(255) not null,
   lastname character varying(255) not null,
-  email character varying(255) not null,
+  email character varying(255) not null unique,
   identity character varying(255) not null,
   password character varying(255) not null,
   isdisabled character varying(255) not null,
