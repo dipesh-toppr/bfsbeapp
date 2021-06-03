@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/dipesh-toppr/bfsbeapp/config"
@@ -39,7 +40,6 @@ func SaveUser(r *http.Request) (User, error) {
 	if config.Database.Create(&u).Error != nil {
 		return u, errors.New("unable to process registration")
 	}
-
 	return u, nil
 }
 
@@ -54,6 +54,8 @@ func validateUserForm(r *http.Request) (User, error) {
 	l := r.FormValue("lastname")
 
 	i := r.FormValue("identity")
+	fmt.Println("hii")
+	fmt.Println(f)
 
 	if p != cp {
 		return u, errors.New("password does not match")
