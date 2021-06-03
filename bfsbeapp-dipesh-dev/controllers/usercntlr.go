@@ -37,6 +37,15 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func AddSlot(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		s, err := models.SaveSlot(r)
+		if err != nil {
+
+		}
+	}
+}
+
 // Login allows registered user to access the application.
 func Login(w http.ResponseWriter, r *http.Request) {
 

@@ -17,7 +17,7 @@ func LoadRoutes() {
 	http.HandleFunc("/signup", controllers.Signup)
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/logout", controllers.Logout)
-
+	http.HandleFunc("/addSlot", controllers.AddSlot)
 	// welcome page
 	http.HandleFunc("/welcome", welcome)
 
