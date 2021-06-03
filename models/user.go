@@ -94,6 +94,7 @@ func CheckUser(email string) (User, error) {
 }
 
 // FindUser looks for registerd user by email.
+
 func FindUser(email string) (User, bool) {
 
 	u := User{}
@@ -108,8 +109,8 @@ func FindUser(email string) (User, bool) {
 
 func IsDisabled(u User) (bool, error) {
 
-	if u.Isdisabled != "1" {
-		return true, errors.New("User is disabled  by admin")
+	if u.Isdisabled == "0" {
+		return true, errors.New("User is disabled  by admin....")
 	}
 
 	return false, nil

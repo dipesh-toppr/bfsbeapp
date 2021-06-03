@@ -56,8 +56,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		d, _ := models.IsDisabled(u)
-		if !d {
-			fmt.Println("User is disabled by admin")
+		if d {
+			fmt.Println("User is disabled by admin.....")
 			return
 		}
 
