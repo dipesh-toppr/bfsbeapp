@@ -17,6 +17,7 @@ create table users
   email character varying(255) not null,
   identity character varying(255) not null,
   password character varying(255) not null,
+  isdisabled character varying(255) not null,
   constraint users_pkey primary key (id)
 )
 with (

@@ -35,8 +35,9 @@ func Createtoken(u models.User, w http.ResponseWriter) error {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  "token",
-		Value: tokenString,
+		Name:     "token",
+		Value:    tokenString,
+		HttpOnly: true,
 	})
 
 	return nil

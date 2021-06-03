@@ -55,6 +55,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		d, _ := models.IsDisabled(u)
+		if !d {
+			fmt.Println("User is disabled by admin")
+			return
+		}
+
 		if !u.ValidatePassword(p) {
 			http.Error(w, "username and/or password do not match", http.StatusForbidden)
 			fmt.Println("Logined Failed")
@@ -77,6 +83,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    "",
+			MaxAge:   -1,
+			HttpOnly: true,
+		})
 		fmt.Println("LogOut Successfully")
 		w.WriteHeader(http.StatusOK)
 

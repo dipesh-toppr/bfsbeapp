@@ -10,12 +10,13 @@ import (
 
 // User object handles information about application's registered users.
 type User struct {
-	ID        uint64
-	Email     string
-	Password  string
-	Firstname string
-	Lastname  string
-	Identity  string
+	ID         uint64
+	Email      string
+	Password   string
+	Firstname  string
+	Lastname   string
+	Identity   string
+	Isdisabled string
 }
 
 // SaveUser create new user entry.
@@ -52,7 +53,6 @@ func validateUserForm(r *http.Request) (User, error) {
 	cp := r.FormValue("cpassword")
 	f := r.FormValue("firstname")
 	l := r.FormValue("lastname")
-
 	i := r.FormValue("identity")
 
 	if p != cp {
@@ -74,6 +74,7 @@ func validateUserForm(r *http.Request) (User, error) {
 	u.Lastname = l
 	u.Password = p
 	u.Identity = i
+	u.Isdisabled = "1"
 
 	return u, nil
 
@@ -103,6 +104,15 @@ func FindUser(email string) (User, bool) {
 
 	return u, true
 
+}
+
+func IsDisabled(u User) (bool, error) {
+
+	if u.Isdisabled != "1" {
+		return true, errors.New("User is disabled  by admin")
+	}
+
+	return false, nil
 }
 
 // ValidatePassword validates the input password against the one in the database.
