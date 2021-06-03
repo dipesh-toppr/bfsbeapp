@@ -94,6 +94,7 @@ func CheckUser(email string) (User, error) {
 }
 
 // FindUser looks for registerd user by email.
+
 func FindUser(email string) (User, bool) {
 
 	u := User{}
