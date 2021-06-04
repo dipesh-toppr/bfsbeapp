@@ -65,8 +65,6 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 		e, id := token.Parsetoken(w, r)
 		slotId := r.FormValue("slot_id")
 		newSlot, _ := strconv.Atoi(r.FormValue("new_slot"))
-
-		fmt.Printf("%T", newSlot)
 		if e != nil {
 			http.Error(w, e.Error(), http.StatusBadRequest)
 		}
@@ -81,7 +79,32 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Slot already exists", http.StatusBadRequest)
 			return
 		}
-		config.Database.Model(&models.Slot{}).Where("id=?", slotId).Update("available_slot", newSlot)
+		if e := config.Database.Model(&models.Slot{}).Where("id=?", slotId).Update("available_slot", newSlot).Error; e != nil {
+			http.Error(w, e.Error(), http.StatusExpectationFailed)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func DeleteSlot(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodDelete {
+		e, id := token.Parsetoken(w, r)
+		if e != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+		}
+		slotId := r.FormValue("DEL_slot")
+		s := models.Slot{}
+		config.Database.Find(&s, "id=?", slotId)
+		teachId := s.TeacherId
+		if teachId != uint(id) {
+			http.Error(w, "authentication failed", http.StatusBadRequest)
+			return
+		}
+		if e := config.Database.Delete(&s).Error; e != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
 	}
 }

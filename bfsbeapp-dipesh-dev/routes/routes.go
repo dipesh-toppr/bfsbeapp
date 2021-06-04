@@ -20,6 +20,7 @@ func LoadRoutes() {
 	http.HandleFunc("/addSlot", controllers.AddSlot)
 	http.HandleFunc("/getUserSlots", controllers.GetUserSlots)
 	http.HandleFunc("/updateSlot", controllers.UpdateSlot)
+	http.HandleFunc("/deleteSlot", controllers.DeleteSlot)
 	// welcome page
 	http.HandleFunc("/welcome", welcome)
 
