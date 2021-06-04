@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -150,6 +151,18 @@ func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Slot Deleted!"))
 		w.WriteHeader(http.StatusOK)
 		return
+	}
+}
+
+// to read the booked slot
+func ReadBooked(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		slot, err := models.GetSlot(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		json.NewEncoder(w).Encode(slot)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

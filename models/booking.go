@@ -49,3 +49,24 @@ func BookSlot(stid uint, slid uint) (uint, error) {
 	}
 	return booked.ID, nil
 }
+
+// get the booked slot
+func GetSlot(r *http.Request) (config.Slot, error) {
+	var slot config.Slot
+	id := r.URL.Query()["bid"][0]
+	bookingId, err := strconv.Atoi(id)
+	if err != nil {
+		return slot, errors.New("invaid booking id")
+	}
+	var booked config.Booked
+	result := config.Database.Where("id = ?", uint(bookingId)).Find(&booked)
+	if result.Error != nil {
+		return slot, errors.New("transaction failed")
+	}
+	slotid := booked.SlotId
+	result1 := config.Database.Where("id = ?", slotid).Find(&slot)
+	if result1.Error != nil {
+		return slot, errors.New("transaction failed")
+	}
+	return slot, nil
+}
