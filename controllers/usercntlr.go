@@ -41,19 +41,18 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 
-		//e := "rak@toppr.com"
+		idtodisable := r.FormValue("idtodisable") //obtaining id to disable as input
 
-		fmt.Println(r.FormValue("uid"))
+		e, mail := token.Parsetoken(w, r) //finding active user mail and if he is logged in
 
-		//	uid =
-		//fmt.Println("r.FormValue()")
+		print(e, "  ", mail) //for debugging
 
-		uid := r.FormValue("uid")
+		if e != nil {
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			return
+		}
 
-		idtodisable := r.FormValue("idtodisable")
-		//request to disable a student or teacher
-
-		u, ok := models.FindUserFromId(idtodisable)
+		user, ok := models.FindUser(mail) //find the user from mail
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -61,17 +60,31 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if u.Identity < "2" {
+		uid := user.Identity //uid is identity of user ie stud,tech,admin,superadmin
+
+		fmt.Println("This is uid ", uid)
+
+		//finding the user detials to check his/her role
+
+		utodisable, ok := models.FindUserFromId(idtodisable)
+
+		if !ok {
+			http.Error(w, "no user found", http.StatusForbidden)
+			fmt.Println("no user found")
+			return
+		}
+
+		if utodisable.Identity < "2" { ///means he is stud or teacher so can be made inactive my both admin and super admin
 
 			if uid >= "2" {
-				//if user iddentity is> 2  means that active user is an admin or super admin & has rights to make any user inactive
+				//if user iddentity is>= 2  means that active user is an admin or super admin & has rights to make any user inactive
 				u := models.MakeInactive(idtodisable)
 				fmt.Print(u)
 
 			} else {
 				fmt.Print("You do not have the rights to make user inactive")
 			}
-		} else if u.Identity == "2" { //request to disable admin do only super admin can do so
+		} else if utodisable.Identity == "2" { //request to disable admin do only super admin can do so
 
 			if uid == "3" { //identity  of superadmin  kept 3
 				u := models.MakeInactive(idtodisable)
