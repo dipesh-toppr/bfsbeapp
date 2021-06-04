@@ -19,6 +19,7 @@ func LoadRoutes() {
 	http.HandleFunc("/logout", controllers.Logout)
 	http.HandleFunc("/addSlot", controllers.AddSlot)
 	http.HandleFunc("/getUserSlots", controllers.GetUserSlots)
+	http.HandleFunc("/updateSlot", controllers.UpdateSlot)
 	// welcome page
 	http.HandleFunc("/welcome", welcome)
 
