@@ -37,15 +37,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AddSlot(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		s, err := models.SaveSlot(r)
-		if err != nil {
-
-		}
-	}
-}
-
 // Login allows registered user to access the application.
 func Login(w http.ResponseWriter, r *http.Request) {
 
@@ -86,6 +77,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    "",
+			MaxAge:   -1,
+			HttpOnly: true,
+		})
 		fmt.Println("LogOut Successfully")
 		w.WriteHeader(http.StatusOK)
 
