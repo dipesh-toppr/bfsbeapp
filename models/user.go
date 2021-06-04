@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/config"
 	"golang.org/x/crypto/bcrypt"
@@ -11,7 +12,7 @@ import (
 
 // User object handles information about application's registered users.
 type User struct {
-	ID         uint64
+	ID         int
 	Email      string
 	Password   string
 	Firstname  string
@@ -96,11 +97,11 @@ func CheckUser(email string) (User, error) {
 
 // FindUser looks for registerd user by email.
 
-func MakeInactive(email string) User {
+func MakeInactive(id string) User {
 
 	u := User{}
 
-	u, ok := FindUser(email)
+	u, ok := FindUserFromId(id)
 	if !ok {
 		//http.Error(w, "username does not exits", http.StatusForbidden)
 		fmt.Println("Logined Failed")
@@ -119,6 +120,19 @@ func FindUser(email string) (User, bool) {
 	u := User{}
 
 	if config.Database.Where(&User{Email: email}).Find(&u).Error != nil {
+		return u, false
+	}
+
+	return u, true
+
+}
+
+func FindUserFromId(id string) (User, bool) {
+
+	u := User{}
+
+	i, _ := strconv.Atoi(id)
+	if config.Database.Where(&User{ID: i}).Find(&u).Error != nil {
 		return u, false
 	}
 

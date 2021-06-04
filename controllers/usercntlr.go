@@ -43,14 +43,43 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 
 		//e := "rak@toppr.com"
 
-		fmt.Println(r.FormValue("email"))
+		fmt.Println(r.FormValue("uid"))
+
+		//	uid =
 		//fmt.Println("r.FormValue()")
 
-		e := r.FormValue("email")
-		u := models.MakeInactive(e)
+		uid := r.FormValue("uid")
 
-		// check if the user exists
-		fmt.Print(u)
+		idtodisable := r.FormValue("idtodisable")
+		//request to disable a student or teacher
+
+		u, ok := models.FindUserFromId(idtodisable)
+
+		if !ok {
+			http.Error(w, "no user found", http.StatusForbidden)
+			fmt.Println("no user found")
+			return
+		}
+
+		if u.Identity < "2" {
+
+			if uid >= "2" {
+				//if user iddentity is> 2  means that active user is an admin or super admin & has rights to make any user inactive
+				u := models.MakeInactive(idtodisable)
+				fmt.Print(u)
+
+			} else {
+				fmt.Print("You do not have the rights to make user inactive")
+			}
+		} else if u.Identity == "2" { //request to disable admin do only super admin can do so
+
+			if uid == "3" { //identity  of superadmin  kept 3
+				u := models.MakeInactive(idtodisable)
+				fmt.Print(u)
+			} else {
+				fmt.Print("You do not have the rights to make admin inactive")
+			}
+		}
 		// http.Redirect(w, r, "/", http.StatusOK)
 	}
 
