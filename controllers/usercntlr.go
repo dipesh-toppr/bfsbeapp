@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/config"
 	"github.com/dipesh-toppr/bfsbeapp/models"
@@ -72,35 +73,84 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// search teahcer for specific timing and subject
+func AddSlot(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		s, err := models.SaveSlot(r)
+		if err != nil {
+
+		}
+		fmt.Println(s.TeacherId)
+	}
+}
+
+// search teahcer for specific timing
 
 func SearchTeacher(w http.ResponseWriter, r *http.Request) {
-	sub := r.URL.Query()["sub"][0]
-	tim := r.URL.Query()["time"][0]
-	fmt.Println(sub + " " + tim)
-	var users []models.User
-	////find the users
-	// config.Database.Find(&users)
-	// for _, val := range users {
-	// 	fmt.Println()
-	// }
-	//update user details
-	// config.Database.Model(&models.User{}).Where("id = ? ", 6).Update("identity", "1")
-
-	///find user  with conditions
-	// config.Database.Find(&users, "id = ?", 6)
-	// for _, val := range users {
-	// 	fmt.Println(val)
-	// }
-	///delete user with
-	// var user models.User
-	// config.Database.Where("id = ?", 6).Delete(&user)
-
-	result := config.Database.Find(&users, "id = ?", 6)
-	if len(users) == 0 {
-		fmt.Println("not found")
+	if r.Method == http.MethodGet {
+		id := r.URL.Query()["id"][0]
+		stid, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "id not valid", http.StatusBadRequest)
+			return
+		}
+		tim, err := models.ValidateTime(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		//check for available slot at time tim
+		slot, err := models.AvailSlot(tim)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		//book the slot
+		bookid, err := models.BookSlot(uint(stid), uint(slot))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		//send booking id to the user
+		msg := "booking ID : " + fmt.Sprint(bookid)
+		w.Write([]byte(msg))
+		w.WriteHeader(http.StatusOK)
+		return
 	}
-	fmt.Println(result.Error)
+}
+
+//delete booked slot
+func DeleteSlot(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id := r.URL.Query()["id"][0]
+		bid := r.URL.Query()["bid"][0]
+		stid, err1 := strconv.Atoi(id)
+		bkid, err2 := strconv.Atoi(bid)
+		if err1 != nil || err2 != nil {
+			http.Error(w, "student_id OR booking_id should be a number", http.StatusBadRequest)
+			return
+		}
+		var booked config.Booked
+		booked.ID = uint(bkid)
+		booked.StudentId = uint(stid)
+		result3 := config.Database.Where("id = ? AND student_id= ?", booked.ID, booked.StudentId).Find(&booked)
+		slot := booked.SlotId
+		if result3.Error != nil {
+			http.Error(w, "Invalid booking ID", http.StatusBadRequest)
+			return
+		}
+		result1 := config.Database.Where("id = ?", booked.ID).Delete(&booked)
+		if result1.Error != nil {
+			http.Error(w, result1.Error.Error(), http.StatusInternalServerError)
+			return
+		}
+		result2 := config.Database.Model(&models.Slot{}).Where("id = ? ", slot).Update("is_booked", 0)
+		if result2.Error != nil {
+			http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("Slot Deleted!"))
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 }
 
 // Logout method to call when the user signed out of the application.

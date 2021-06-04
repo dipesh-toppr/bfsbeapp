@@ -6,24 +6,23 @@ import (
 
 	"github.com/dipesh-toppr/bfsbeapp/controllers"
 	"github.com/dipesh-toppr/bfsbeapp/token"
-	"github.com/gorilla/mux"
 )
 
 // LoadRoutes handles routes to pages of the application.
 func LoadRoutes() {
-	r := mux.NewRouter()
 	// Index or main page.
-	r.HandleFunc("/", index)
+	http.HandleFunc("/", index)
 
 	// User related route(s)
-	r.HandleFunc("/signup", controllers.Signup)
-	r.HandleFunc("/login", controllers.Login)
-	r.HandleFunc("/logout", controllers.Logout)
-
+	http.HandleFunc("/signup", controllers.Signup)
+	http.HandleFunc("/login", controllers.Login)
+	http.HandleFunc("/logout", controllers.Logout)
+	http.HandleFunc("/addSlot", controllers.AddSlot)
+	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
+	http.HandleFunc("/delete-slot", controllers.DeleteSlot)
 	// welcome page
-	r.HandleFunc("/welcome", welcome)
-	r.HandleFunc("/search-teacher", controllers.SearchTeacher)
-	log.Fatal(http.ListenAndServe(":8080", r))
+	http.HandleFunc("/welcome", welcome)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
