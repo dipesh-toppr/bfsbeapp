@@ -43,7 +43,7 @@ func Createtoken(u models.User, w http.ResponseWriter) error {
 	return nil
 }
 
-func Parsetoken(w http.ResponseWriter, r *http.Request) error {
+func Parsetoken(w http.ResponseWriter, r *http.Request) (error, string) {
 
 	// We can obtain the session token from the requests cookies, which come with every request
 	c, err := r.Cookie("token")
@@ -51,11 +51,11 @@ func Parsetoken(w http.ResponseWriter, r *http.Request) error {
 		if err == http.ErrNoCookie {
 			// If the cookie is not set, return an unauthorized status
 			w.WriteHeader(http.StatusUnauthorized)
-			return err
+			return err, "hi"
 		}
 		// For any other type of error, return a bad request status
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return err, "hi"
 	}
 
 	// Get the JWT string from the cookie
@@ -74,19 +74,19 @@ func Parsetoken(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return err
+			return err, "hi"
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return err, "hi"
 	}
 	if !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return errors.New("TOKEN NOT VALID")
+		return errors.New("TOKEN NOT VALID"), "not valid"
 	}
 
 	// Finally, return the welcome message to the user, along with their
 	// username given in the token
 	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Email)))
 
-	return nil
+	return nil, claims.Email
 }

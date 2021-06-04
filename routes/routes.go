@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/dipesh-toppr/bfsbeapp/controllers"
@@ -38,7 +39,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 // try welcome api for fun !
 func welcome(w http.ResponseWriter, r *http.Request) {
 
-	e := token.Parsetoken(w, r)
+	e, mail := token.Parsetoken(w, r)
+	fmt.Printf(mail,"    "e)
+	//fmt.Printf(e)
 	if e != nil {
 		http.Redirect(w, r, "/", http.StatusUnauthorized)
 		return
