@@ -40,7 +40,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 func welcome(w http.ResponseWriter, r *http.Request) {
 
 	e, mail := token.Parsetoken(w, r)
-	fmt.Printf(mail,"    "e)
+	fmt.Printf(mail, "    ", e)
 	//fmt.Printf(e)
 	if e != nil {
 		http.Redirect(w, r, "/", http.StatusUnauthorized)
