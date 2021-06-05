@@ -42,7 +42,6 @@ func SaveUser(r *http.Request) (User, error) {
 	if config.Database.Create(&u).Error != nil {
 		return u, errors.New("unable to process registration")
 	}
-
 	return u, nil
 }
 
@@ -55,7 +54,10 @@ func validateUserForm(r *http.Request) (User, error) {
 	cp := r.FormValue("cpassword")
 	f := r.FormValue("firstname")
 	l := r.FormValue("lastname")
+
 	i := r.FormValue("identity")
+	fmt.Println("hii")
+	fmt.Println(f)
 
 	if p != cp {
 		return u, errors.New("password does not match")
@@ -96,6 +98,17 @@ func CheckUser(email string) (User, error) {
 }
 
 // FindUser looks for registerd user by email.
+func FindUser(email string) (User, bool) {
+
+	u := User{}
+
+	if config.Database.Where(&User{Email: email}).Find(&u).Error != nil {
+		return u, false
+	}
+
+	return u, true
+
+}
 
 func MakeInactive(id string) User {
 
@@ -113,18 +126,6 @@ func MakeInactive(id string) User {
 	config.Database.Model(&u).Update("isdisabled", "1")
 
 	return u
-}
-
-func FindUser(email string) (User, bool) {
-
-	u := User{}
-
-	if config.Database.Where(&User{Email: email}).Find(&u).Error != nil {
-		return u, false
-	}
-
-	return u, true
-
 }
 
 func FindUserFromId(id string) (User, bool) {

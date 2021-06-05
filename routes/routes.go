@@ -2,6 +2,7 @@ package routes
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/dipesh-toppr/bfsbeapp/controllers"
@@ -10,7 +11,6 @@ import (
 
 // LoadRoutes handles routes to pages of the application.
 func LoadRoutes() {
-
 	// Index or main page.
 	http.HandleFunc("/", index)
 
@@ -18,12 +18,18 @@ func LoadRoutes() {
 	http.HandleFunc("/signup", controllers.Signup)
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/logout", controllers.Logout)
+	http.HandleFunc("/addSlot", controllers.AddSlot)
+	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
+	http.HandleFunc("/delete-slot", controllers.DeleteBooking)
 
+	//admin disable
 	http.HandleFunc("/admin", controllers.Admin)
+
+	http.HandleFunc("/admindeletebooking", controllers.AdminDeleteBooking)
+
 	// welcome page
 	http.HandleFunc("/welcome", welcome)
-
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
@@ -40,8 +46,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 func welcome(w http.ResponseWriter, r *http.Request) {
 
 	e, mail := token.Parsetoken(w, r)
-	fmt.Printf(mail, "    ", e)
-	//fmt.Printf(e)
+	fmt.Printf(mail)
 	if e != nil {
 		http.Redirect(w, r, "/", http.StatusUnauthorized)
 		return

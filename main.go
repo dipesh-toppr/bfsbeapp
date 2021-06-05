@@ -10,8 +10,9 @@ import (
 // Application starts here.
 func main() {
 	db := config.Database
+
 	routes.LoadRoutes()
 
 	db.Close()
-	fmt.Printf("Database connections closed !")
+	fmt.Printf("Database close")
 }
