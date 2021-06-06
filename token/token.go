@@ -2,7 +2,6 @@ package token
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -12,7 +11,8 @@ import (
 var jwtKey = []byte("my_secret_key")
 
 type Claims struct {
-	Email string `json:"email"`
+	Email  string `json:"email"`
+	UserId uint64 `json:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -42,7 +42,7 @@ func Createtoken(u models.User, w http.ResponseWriter) error {
 	return nil
 }
 
-func Parsetoken(w http.ResponseWriter, r *http.Request) (error, string) {
+func Parsetoken(w http.ResponseWriter, r *http.Request) (uint64, err) {
 
 	// We can obtain the session token from the requests cookies, which come with every request
 	c, err := r.Cookie("token")
@@ -50,11 +50,11 @@ func Parsetoken(w http.ResponseWriter, r *http.Request) (error, string) {
 		if err == http.ErrNoCookie {
 			// If the cookie is not set, return an unauthorized status
 			w.WriteHeader(http.StatusUnauthorized)
-			return err, "hi"
+			return 0, err
 		}
 		// For any other type of error, return a bad request status
 		w.WriteHeader(http.StatusBadRequest)
-		return err, "hi"
+		return 0, err
 	}
 
 	// Get the JWT string from the cookie
@@ -73,19 +73,19 @@ func Parsetoken(w http.ResponseWriter, r *http.Request) (error, string) {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return err, "hi"
+			return 0, err
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return err, "hi"
+		return 0, err
 	}
 	if !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return errors.New("TOKEN NOT VALID"), "not valid"
+		return 0, errors.New("TOKEN NOT VALID")
 	}
 
 	// Finally, return the welcome message to the user, along with their
 	// username given in the token
-	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Email)))
+	// w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Email)))
 
-	return nil, claims.Email
+	return claims.UserId, nil
 }

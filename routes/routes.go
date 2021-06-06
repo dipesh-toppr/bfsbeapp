@@ -19,6 +19,9 @@ func LoadRoutes() {
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/logout", controllers.Logout)
 	http.HandleFunc("/addSlot", controllers.AddSlot)
+	http.HandleFunc("/getUserSlots", controllers.GetUserSlots)
+	http.HandleFunc("/updateSlot", controllers.UpdateSlot)
+	http.HandleFunc("/deleteSlot", controllers.DeleteSlot)
 	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
 	http.HandleFunc("/delete-slot", controllers.DeleteBooking)
 
