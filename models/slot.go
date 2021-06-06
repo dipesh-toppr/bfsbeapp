@@ -15,7 +15,7 @@ type Slot struct {
 	IsBooked      uint
 }
 
-func SaveSlot(r *http.Request, id uint64) (Slot, error) {
+func SaveSlot(r *http.Request, id int) (Slot, error) {
 	//to validate the data
 	s, err := validateSlotForm(r, uint(id))
 	if err != nil {

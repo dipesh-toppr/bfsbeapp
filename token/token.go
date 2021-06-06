@@ -12,7 +12,7 @@ var jwtKey = []byte("my_secret_key")
 
 type Claims struct {
 	Email  string `json:"email"`
-	UserId uint64 `json:"user_id"`
+	UserId int    `json:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -22,6 +22,7 @@ func Createtoken(u models.User, w http.ResponseWriter) error {
 	// Create the JWT claims, which includes the EmailId.
 	claims := &Claims{
 		Email:          u.Email,
+		UserId:         (u.ID),
 		StandardClaims: jwt.StandardClaims{},
 	}
 	// Declare the token with the algorithm used for signing, and the claims
@@ -42,7 +43,7 @@ func Createtoken(u models.User, w http.ResponseWriter) error {
 	return nil
 }
 
-func Parsetoken(w http.ResponseWriter, r *http.Request) (uint64, err) {
+func Parsetoken(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	// We can obtain the session token from the requests cookies, which come with every request
 	c, err := r.Cookie("token")

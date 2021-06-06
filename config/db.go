@@ -18,6 +18,15 @@ type Slot struct {
 	AvailableSlot uint
 	IsBooked      uint
 }
+type User struct {
+	ID         int
+	Email      string
+	Password   string
+	Firstname  string
+	Lastname   string
+	Identity   string
+	Isdisabled string
+}
 
 type Booked struct {
 	ID        uint
@@ -27,10 +36,13 @@ type Booked struct {
 
 func init() {
 	var err error
-	Database, err = gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=bfsbedata password=daddycool sslmode=disable")
+	Database, err = gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=postgres password=6677 sslmode=disable")
 
 	if err != nil {
 		panic(err)
+	}
+	if !Database.HasTable(&User{}) {
+		Database.CreateTable(&User{})
 	}
 	//create table named slots
 	if !Database.HasTable(&Slot{}) {

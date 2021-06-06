@@ -86,16 +86,16 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 
 		idtodisable := r.FormValue("idtodisable") //obtaining id to disable as input
 
-		e, mail := token.Parsetoken(w, r) //finding active user mail and if he is logged in
+		id, e := token.Parsetoken(w, r) //finding active user mail and if he is logged in
 
-		print(e, "  ", mail) //for debugging
+		// print(e, "  ", mail) //for debugging
 
 		if e != nil {
 			http.Redirect(w, r, "/", http.StatusUnauthorized)
 			return
 		}
 
-		user, ok := models.FindUser(mail) //find the user from mail
+		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -141,19 +141,19 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func AddSlot(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		s, err := models.SaveSlot(r)
+// func AddSlot(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == http.MethodPost {
+// 		s, err := models.SaveSlot(r)
 
-		fmt.Println(s, " ", err)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(s.TeacherId)
-	}
+// 		fmt.Println(s, " ", err)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		fmt.Println(s.TeacherId)
+// 	}
 
-	//fmt.Printf("bro")
-}
+// 	//fmt.Printf("bro")
+// }
 
 // search teahcer for specific timing
 
@@ -231,16 +231,16 @@ func DeleteBooking(w http.ResponseWriter, r *http.Request) {
 func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 
-		e, mail := token.Parsetoken(w, r) //finding active user mail and if he is logged in
+		id, e := token.Parsetoken(w, r) //finding active user mail and if he is logged in
 
-		print(e, "  ", mail) //for debugging
+		// print(e, "  ", mail) //for debugging
 
 		if e != nil {
 			http.Redirect(w, r, "/", http.StatusUnauthorized)
 			return
 		}
 
-		user, ok := models.FindUser(mail) //find the user from mail
+		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -293,11 +293,13 @@ func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 // Logout method to call when the user signed out of the application.
 func Logout(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == http.MethodPost {
-		fmt.Println("LogOut Successfully")
-		w.WriteHeader(http.StatusOK)
-
-		// http.Redirect(w, r, "/", http.StatusOK)
-	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
+	fmt.Println("LogOut Successfully")
+	w.WriteHeader(http.StatusOK)
 
 }
