@@ -19,8 +19,8 @@ func LoadRoutes() {
 	http.HandleFunc("/logout", controllers.Logout)
 	http.HandleFunc("/addSlot", controllers.AddSlot)
 	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
-	http.HandleFunc("/delete-slot", controllers.DeleteSlot)
-	http.HandleFunc("/read-booked", controllers.ReadBooked)
+	http.HandleFunc("/delete-booking", controllers.DeleteBooking)
+	http.HandleFunc("/read-booking", controllers.ReadBooking)
 	// welcome page
 	http.HandleFunc("/welcome", welcome)
 	log.Fatal(http.ListenAndServe(":8080", nil))

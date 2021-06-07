@@ -74,16 +74,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func AddSlot(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		s, err := models.SaveSlot(r)
-		if err != nil {
-
-		}
-		fmt.Println(s.TeacherId)
-	}
-}
-
 // search teahcer for specific timing
 
 func SearchTeacher(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +109,7 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 }
 
 //delete booked slot
-func DeleteSlot(w http.ResponseWriter, r *http.Request) {
+func DeleteBooking(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Query()["id"][0]
 		bid := r.URL.Query()["bid"][0]
@@ -155,7 +145,7 @@ func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 }
 
 // to read the booked slot
-func ReadBooked(w http.ResponseWriter, r *http.Request) {
+func ReadBooking(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		slot, err := models.GetSlot(r)
 		if err != nil {
