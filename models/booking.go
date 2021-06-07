@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,7 +52,7 @@ func BookSlot(stid uint, slid uint) (uint, error) {
 	return booked.ID, nil
 }
 
-//read slot
+//read bookings
 func ReadBooked(r *http.Request) (config.Slot, bool) {
 	var slot config.Slot
 	bid := r.URL.Query()["bid"][0] //get the booking id
@@ -84,4 +85,36 @@ func IsAlreadyBooked(uid uint, tim uint) bool {
 		}
 	}
 	return false
+}
+func ReadStudents(r *http.Request) ([]config.User, bool) {
+
+	var stud []config.User
+	result := config.Database.Where("identity = ?", uint(1)).Find(&stud)
+	if result.Error != nil {
+		return stud, false
+	}
+	fmt.Print(stud)
+	return stud, true
+}
+
+func ReadTeachers(r *http.Request) ([]config.User, bool) {
+
+	var teach []config.User
+	result := config.Database.Where("identity = ?", uint(0)).Find(&teach)
+	if result.Error != nil {
+		return teach, false
+	}
+	fmt.Print(teach)
+	return teach, true
+}
+
+func ReadAdminBooked(r *http.Request) ([]config.Booked, bool) {
+
+	var booked []config.Booked
+	result := config.Database.Find(&booked)
+	if result.Error != nil {
+		return booked, false
+	}
+
+	return booked, true
 }

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -17,7 +16,16 @@ func AddSlot(w http.ResponseWriter, r *http.Request) {
 		//user authentication
 		id, e := token.Parsetoken(w, r)
 		if e != nil {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			http.Error(w, "authentication failed", http.StatusBadRequest)
+			return
+		}
+		teach := models.User{}
+		if config.Database.Where("id=?", id).First(&teach).Error != nil {
+			http.Error(w, "unable to process the transaction", http.StatusBadGateway)
+			return
+		}
+		if teach.Identity != strconv.Itoa(0) {
+			http.Error(w, "Only teacher can add time slots", http.StatusBadGateway)
 			return
 		}
 		//saving the slot in the database
@@ -26,7 +34,8 @@ func AddSlot(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Println("slot created sucessfully\n", s)
+		w.Write([]byte("slot created sucessfully\n"))
+		json.NewEncoder(w).Encode(s)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -39,7 +48,7 @@ func GetUserSlots(w http.ResponseWriter, r *http.Request) {
 		//user authentication
 		id, e := token.Parsetoken(w, r)
 		if e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
+			http.Error(w, "authentication failed", http.StatusBadRequest)
 		}
 
 		slots := []models.Slot{}
@@ -83,10 +92,44 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.Error(), http.StatusExpectationFailed)
 			return
 		}
+		s.AvailableSlot = uint(newSlot)
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(s)
 	}
 }
+func GetUniqueSlots(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method == http.MethodGet {
+		//user authentication
+		_, e := token.Parsetoken(w, r)
+		if e != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+		}
+
+		slots := []models.Slot{}
+		as := make(map[int]bool)
+
+		if e := config.Database.Raw("SELECT * FROM slots WHERE is_booked=? ORDER BY available_slot", 0).Scan(&slots).Error; e != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
+		}
+		keys := []int{}
+		for _, i := range slots {
+			_, ok := as[int(i.AvailableSlot)]
+			if !ok {
+				as[int(i.AvailableSlot)] = true
+				keys = append(keys, int(i.AvailableSlot))
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+		//writing the json response to the response writter
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(keys)
+		return
+	}
+	w.WriteHeader(http.StatusBadRequest)
+}
 func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodDelete {
 		id, e := token.Parsetoken(w, r)
@@ -105,6 +148,7 @@ func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		}
+		json.NewEncoder(w).Encode(s)
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
