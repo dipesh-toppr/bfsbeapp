@@ -114,10 +114,78 @@ func MakeInactive(id string) User {
 	u := User{}
 
 	u, ok := FindUserFromId(id)
-	if !ok {
-		//http.Error(w, "username does not exits", http.StatusForbidden)
-		fmt.Println("Logined Failed")
-		return u
+
+	iden := u.Identity
+	fmt.Println(iden)
+	fmt.Println(u)
+
+	if iden == "1" { ///he is a student
+
+		var booked []config.Booked
+
+		result1 := config.Database.Where("student_id= ?", u.ID).Find(&booked)
+		if result1.Error != nil {
+
+			return u
+		}
+
+		fmt.Println(booked)
+
+		//result2 := config.Database.Where("slot_id= ?",booked.SlotId).Find(&booked)
+		for i := range booked {
+
+			result2 := config.Database.Model(&config.Slot{}).Where("id = ? ", booked[i].SlotId).Update("is_booked", 0)
+			if result2.Error != nil {
+				//	http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
+				return u
+			}
+
+			result3 := config.Database.Delete(&booked[i])
+
+			if result3.Error != nil {
+				//http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
+				return u
+			}
+
+		}
+
+	} else if iden == "0" { ///he is teacher
+
+		var slots []config.Slot
+
+		result1 := config.Database.Where("teacher_id= ?", u.ID).Find(&slots)
+		if result1.Error != nil {
+
+			return u
+		}
+
+		fmt.Println(slots)
+
+		//result2 := config.Database.Where("slot_id= ?",booked.SlotId).Find(&booked)
+		for i := range slots {
+			result2 := config.Database.Model(&config.Booked{}).Where("slot_id = ? ", slots[i].ID).Delete(&config.Booked{})
+			if result2.Error != nil {
+
+				return u
+			}
+
+			result3 := config.Database.Delete(&slots[i])
+
+			if result3.Error != nil {
+				//http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
+				return u
+
+			}
+		}
+
+		if !ok {
+			//http.Error(w, "username does not exits", http.StatusForbidden)
+			fmt.Println("Logined Failed")
+			return u
+		}
+	} else {
+
+		fmt.Println("he is an admin/superadmin")
 	}
 
 	//db.Model(&u).Update("isdisabled", "0")

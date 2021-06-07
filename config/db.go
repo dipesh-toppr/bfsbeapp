@@ -36,7 +36,7 @@ type Booked struct {
 
 func init() {
 	var err error
-	Database, err = gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=postgres password=6677 sslmode=disable")
+	Database, err = gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=bfsbedata password=daddycool sslmode=disable")
 
 	if err != nil {
 		panic(err)
