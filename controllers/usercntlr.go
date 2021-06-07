@@ -236,6 +236,65 @@ func ReadBooking(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//admin read all bookings
+
+func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id, e := token.Parsetoken(w, r)
+		fmt.Println(id)
+		if e != nil || id < 2 {
+			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			return
+		}
+
+		slot, ok := models.ReadAdminBooked(r)
+		if !ok {
+			http.Error(w, "not found", http.StatusBadRequest)
+			return
+		}
+		json.NewEncoder(w).Encode(slot)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id, e := token.Parsetoken(w, r)
+		fmt.Println(id)
+		if e != nil || id < 2 {
+			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			return
+		}
+
+		teachers, ok := models.ReadTeachers(r)
+		if !ok {
+			http.Error(w, "not found", http.StatusBadRequest)
+			return
+		}
+		json.NewEncoder(w).Encode(teachers)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id, e := token.Parsetoken(w, r)
+		fmt.Println(id)
+		if e != nil || id < 2 {
+			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			return
+		}
+
+		students, ok := models.ReadStudents(r)
+		if !ok {
+			http.Error(w, "not found", http.StatusBadRequest)
+			return
+		}
+		json.NewEncoder(w).Encode(students)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 //admin delete booking
 
 func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
