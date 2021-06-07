@@ -86,7 +86,36 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+func GetUniqueSlots(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method == http.MethodGet {
+		//user authentication
+		_, e := token.Parsetoken(w, r)
+		if e != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+		}
+
+		slots := []models.Slot{}
+		var as []uint
+		// var s []uint
+		// config.Database.Model(&config.Slot{}).Pluck("teacher_id", &s)
+		// fmt.Println(s)
+		if e := config.Database.Raw("SELECT DISTINCT available_slot FROM slots ORDER BY available_slot").Scan(&slots).Error; e != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
+		}
+		for _, i := range slots {
+			as = append(as, i.AvailableSlot)
+		}
+		w.WriteHeader(http.StatusOK)
+		fmt.Println(slots)
+		//writing the json response to the response writter
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(as)
+		return
+	}
+	w.WriteHeader(http.StatusBadRequest)
+}
 func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodDelete {
 		id, e := token.Parsetoken(w, r)
