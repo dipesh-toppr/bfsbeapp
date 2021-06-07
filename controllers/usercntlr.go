@@ -23,6 +23,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		fmt.Println(u)
+		w.Write([]byte("SignUp Successfully"))
 		fmt.Println("SignUp Successfully")
 
 		// add token to cookies
@@ -65,7 +66,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Logined Failed")
 			return
 		}
-
+		w.Write([]byte("Logined Successfully"))
 		fmt.Println("Logined Successfully")
 
 		// add token to cookies
@@ -87,6 +88,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
+	w.Write([]byte("LogOut Successfully"))
 	fmt.Println("LogOut Successfully")
 	w.WriteHeader(http.StatusOK)
 

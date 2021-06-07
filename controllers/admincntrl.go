@@ -56,6 +56,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 				fmt.Print(u)
 
 			} else {
+				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
 				fmt.Print("You do not have the rights to make user inactive")
 			}
 		} else if utodisable.Identity == "2" { //request to disable admin do only super admin can do so
@@ -189,6 +190,7 @@ func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
+			http.Error(w, "You are not authorised to cancel the booking", http.StatusBadRequest)
 			fmt.Println("You are not authorised to cancel the booking")
 		}
 
