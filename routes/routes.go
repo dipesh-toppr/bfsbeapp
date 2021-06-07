@@ -13,15 +13,18 @@ func LoadRoutes() {
 	http.HandleFunc("/", index)
 
 	// User related route(s)
-	http.HandleFunc("/signup", controllers.Signup) //
-	http.HandleFunc("/login", controllers.Login)   //
-	http.HandleFunc("/logout", controllers.Logout) //
+	http.HandleFunc("/signup", controllers.Signup)
+	http.HandleFunc("/login", controllers.Login)
+	http.HandleFunc("/logout", controllers.Logout)
 
+	//slot related routes
 	http.HandleFunc("/addSlot", controllers.AddSlot)
 	http.HandleFunc("/getUserSlots", controllers.GetUserSlots)
 	http.HandleFunc("/updateSlot", controllers.UpdateSlot)
 	http.HandleFunc("/deleteSlot", controllers.DeleteSlot)
 	http.HandleFunc("/getUniqueSlots", controllers.GetUniqueSlots)
+
+	//booking related routes
 	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
 	http.HandleFunc("/delete-booking", controllers.DeleteBooking)
 	http.HandleFunc("/read-booking", controllers.ReadBooking)
