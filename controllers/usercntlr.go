@@ -134,8 +134,11 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 				u := models.MakeInactive(idtodisable)
 				fmt.Print(u)
 			} else {
-				fmt.Print("You do not have the rights to make admin inactive")
+				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
 			}
+		}
+		if utodisable.Identity == "3" {
+			http.Error(w, "you cannot disable super admin", http.StatusBadRequest)
 		}
 		// http.Redirect(w, r, "/", http.StatusOK)
 	}
@@ -329,7 +332,7 @@ func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 			var booked config.Booked
 			booked.ID = uint(bkid)
 			booked.StudentId = uint(id)
-			result3 := config.Database.Where("id = ? AND student_id= ?", booked.ID, booked.StudentId).Find(&booked)
+			result3 := config.Database.Where("id = ?", booked.ID).Find(&booked)
 			slot := booked.SlotId
 			if result3.Error != nil {
 				http.Error(w, "Invalid booking ID", http.StatusBadRequest)
