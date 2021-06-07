@@ -71,3 +71,17 @@ func ReadBooked(r *http.Request) (config.Slot, bool) {
 	}
 	return slot, true
 }
+
+//check for already booked slot at a given time
+func IsAlreadyBooked(uid uint, tim uint) bool {
+	var booked []config.Booked
+	config.Database.Where("student_id = ?", uid).Find(&booked)
+	for _, val := range booked {
+		var slot config.Slot
+		config.Database.Where("id = ?", val.SlotId).Find(&slot)
+		if slot.AvailableSlot == tim {
+			return true
+		}
+	}
+	return false
+}

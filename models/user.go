@@ -159,3 +159,10 @@ func (u *User) ValidatePassword(p string) bool {
 	return err == nil
 
 }
+
+//find the type of user
+func UserType(uid uint) string {
+	var user User
+	config.Database.Where("id = ?", uid).Find(&user)
+	return user.Identity
+}

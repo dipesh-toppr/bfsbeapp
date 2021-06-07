@@ -152,10 +152,20 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
+		utype := models.UserType(uint(id)) //checking type of user
+		if utype != "1" {
+			http.Error(w, "you are not allowed to book session!", http.StatusBadRequest)
+			return
+		}
 		tim, err := models.ValidateTime(r)
 		print(tim, " ", err)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		//check for already booking at this time
+		if models.IsAlreadyBooked(uint(id), tim) {
+			http.Error(w, "you have already booked a session at this time", http.StatusBadRequest)
 			return
 		}
 		//check for available slot at time tim
