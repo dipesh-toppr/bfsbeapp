@@ -22,13 +22,13 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println(u)
-		w.Write([]byte("SignUp Successfully"))
-		fmt.Println("SignUp Successfully")
-
 		// add token to cookies
 		token.Createtoken(u, w)
 		w.WriteHeader(http.StatusOK)
+
+		fmt.Println(u)
+		w.Write([]byte("SignUp Successful"))
+		fmt.Println("SignUp Successful")
 
 		// redirect
 		// http.Redirect(w, r, "/", http.StatusOK)
@@ -54,9 +54,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		d, err := models.IsDisabled(u)
+		d, _ := models.IsDisabled(u)
 		if d {
-			http.Error(w, err.Error(), http.StatusForbidden)
+			// http.Error(w, err.Error(), http.StatusForbidden)
+			http.Error(w, "user is disabled by admin....", http.StatusForbidden)
 			fmt.Println("user is disabled by admin....")
 			return
 		}
@@ -66,12 +67,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Logined Failed")
 			return
 		}
-		w.Write([]byte("Logined Successfully"))
-		fmt.Println("Logined Successfully")
 
 		// add token to cookies
 		token.Createtoken(u, w)
 		w.WriteHeader(http.StatusOK)
+
+		w.Write([]byte("Login Successful"))
+		fmt.Println("Login Successful")
 
 		// http.Redirect(w, r, "/", http.StatusOK)
 		return
@@ -88,8 +90,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
-	w.Write([]byte("LogOut Successfully"))
-	fmt.Println("LogOut Successfully")
+	w.Write([]byte("LogOut Successful"))
+	fmt.Println("LogOut Successful")
 	w.WriteHeader(http.StatusOK)
 
 }

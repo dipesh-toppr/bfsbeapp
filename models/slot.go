@@ -36,8 +36,8 @@ func validateSlotForm(r *http.Request, id uint) (Slot, error) {
 
 	//validating the slot timing it should be between 0 and 24
 	a, err := strconv.Atoi(as)
-	if err != nil || a > 24 || a < 0 {
-		return Slot{}, errors.New("available_slot should be a number between 0 and 24")
+	if err != nil || a > 24 || a < 1 {
+		return Slot{}, errors.New("available_slot should be a number between 1 and 23")
 	}
 
 	s.AvailableSlot = uint(a)

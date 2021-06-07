@@ -54,6 +54,9 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 				//if user iddentity is>= 2  means that active user is an admin or super admin & has rights to make any user inactive
 				u := models.MakeInactive(idtodisable)
 				fmt.Print(u)
+				w.Write([]byte("user disabled\n"))
+				json.NewEncoder(w).Encode(u)
+				return
 
 			} else {
 				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
@@ -64,6 +67,9 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 			if uid == "3" { //identity  of superadmin  kept 3
 				u := models.MakeInactive(idtodisable)
 				fmt.Print(u)
+				w.Write([]byte("user disabled\n"))
+				json.NewEncoder(w).Encode(u)
+				return
 			} else {
 				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
 			}
