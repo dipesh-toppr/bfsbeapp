@@ -18,6 +18,15 @@ type Slot struct {
 	AvailableSlot uint
 	IsBooked      uint
 }
+type User struct {
+	ID         int
+	Email      string
+	Password   string
+	Firstname  string
+	Lastname   string
+	Identity   string
+	Isdisabled string
+}
 
 type Booked struct {
 	ID        uint
@@ -31,6 +40,9 @@ func init() {
 
 	if err != nil {
 		panic(err)
+	}
+	if !Database.HasTable(&User{}) {
+		Database.CreateTable(&User{})
 	}
 	//create table named slots
 	if !Database.HasTable(&Slot{}) {

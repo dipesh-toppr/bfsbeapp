@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/dipesh-toppr/bfsbeapp/controllers"
-	"github.com/dipesh-toppr/bfsbeapp/token"
 )
 
 // LoadRoutes handles routes to pages of the application.
@@ -18,11 +17,20 @@ func LoadRoutes() {
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/logout", controllers.Logout)
 	http.HandleFunc("/addSlot", controllers.AddSlot)
+	http.HandleFunc("/getUserSlots", controllers.GetUserSlots)
+	http.HandleFunc("/updateSlot", controllers.UpdateSlot)
+	http.HandleFunc("/deleteSlot", controllers.DeleteSlot)
 	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
 	http.HandleFunc("/delete-booking", controllers.DeleteBooking)
 	http.HandleFunc("/read-booking", controllers.ReadBooking)
+
+	//admin disable
+	http.HandleFunc("/admin", controllers.Admin)
+
+	http.HandleFunc("/admindeletebooking", controllers.AdminDeleteBooking)
+
 	// welcome page
-	http.HandleFunc("/welcome", welcome)
+	// http.HandleFunc("/welcome", welcome)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
@@ -37,13 +45,14 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 // try welcome api for fun !
-func welcome(w http.ResponseWriter, r *http.Request) {
+// func welcome(w http.ResponseWriter, r *http.Request) {
 
-	e := token.Parsetoken(w, r)
-	if e != nil {
-		http.Redirect(w, r, "/", http.StatusUnauthorized)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	// http.Redirect(w, r, "/", http.StatusOK)
-}
+// 	e, mail := token.Parsetoken(w, r)
+// 	fmt.Printf(mail)
+// 	if e != nil {
+// 		http.Redirect(w, r, "/", http.StatusUnauthorized)
+// 		return
+// 	}
+// 	w.WriteHeader(http.StatusOK)
+// 	// http.Redirect(w, r, "/", http.StatusOK)
+// }

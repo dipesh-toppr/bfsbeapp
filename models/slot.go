@@ -15,31 +15,36 @@ type Slot struct {
 	IsBooked      uint
 }
 
-func SaveSlot(r *http.Request) (Slot, error) {
-	s, err := validateSlotForm(r)
+func SaveSlot(r *http.Request, id int) (Slot, error) {
+	//to validate the data
+	s, err := validateSlotForm(r, uint(id))
 	if err != nil {
 		return s, err
 	}
+	s.TeacherId = uint(id)
 	if config.Database.Create(&s).Error != nil {
 		return s, errors.New("unable to process the transaction")
 	}
+
 	return s, nil
 }
 
-func validateSlotForm(r *http.Request) (Slot, error) {
-	t := r.FormValue("teacher_id")
+func validateSlotForm(r *http.Request, id uint) (Slot, error) {
+
 	as := r.FormValue("available_slot")
-	s := Slot{}
-	ti, err := strconv.Atoi(t)
-	if err != nil {
-		return s, errors.New("invalid teacher_id")
-	}
+	s := Slot{TeacherId: id}
+
+	//validating the slot timing it should be between 0 and 24
 	a, err := strconv.Atoi(as)
 	if err != nil || a > 24 || a < 0 {
 		return Slot{}, errors.New("available_slot should be a number between 0 and 24")
 	}
-	s.TeacherId = uint(ti)
+
 	s.AvailableSlot = uint(a)
-	s.IsBooked = 0
+
+	//checking if there is already a slot available in the db to avoid duplicate entries
+	if config.Database.Find(&Slot{}, s).Error == nil {
+		return Slot{}, errors.New("Slot already exits")
+	}
 	return s, nil
 }

@@ -4,19 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/config"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// User object handles information about application's registered users.
 type User struct {
-	ID        uint64
-	Email     string
-	Password  string
-	Firstname string
-	Lastname  string
-	Identity  string
+	ID         int
+	Email      string
+	Password   string
+	Firstname  string
+	Lastname   string
+	Identity   string
+	Isdisabled string
 }
 
 // SaveUser create new user entry.
@@ -76,6 +77,7 @@ func validateUserForm(r *http.Request) (User, error) {
 	u.Lastname = l
 	u.Password = p
 	u.Identity = i
+	u.Isdisabled = "0"
 
 	return u, nil
 
@@ -105,6 +107,48 @@ func FindUser(email string) (User, bool) {
 
 	return u, true
 
+}
+
+func MakeInactive(id string) User {
+
+	u := User{}
+
+	u, ok := FindUserFromId(id)
+	if !ok {
+		//http.Error(w, "username does not exits", http.StatusForbidden)
+		fmt.Println("Logined Failed")
+		return u
+	}
+
+	//db.Model(&u).Update("isdisabled", "0")
+
+	config.Database.Model(&u).Update("isdisabled", "1")
+
+	return u
+}
+
+func FindUserFromId(id string) (User, bool) {
+
+	u := User{}
+
+	i, _ := strconv.Atoi(id)
+	if config.Database.Where(&User{ID: i}).Find(&u).Error != nil {
+		return u, false
+	}
+
+	return u, true
+
+}
+
+func IsDisabled(u User) (bool, error) {
+
+	fmt.Print(u.Isdisabled)
+
+	if u.Isdisabled == "1" {
+		return true, errors.New("user is disabled  by admin")
+	}
+
+	return false, nil
 }
 
 // ValidatePassword validates the input password against the one in the database.

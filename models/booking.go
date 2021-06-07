@@ -28,6 +28,7 @@ func ValidateTime(r *http.Request) (uint, error) {
 func AvailSlot(tim uint) (uint, error) {
 	var slot Slot
 	tmp := config.Database.Where("available_slot = ? AND is_booked = ?", tim, 0).First(&slot)
+
 	if tmp.Error != nil {
 		return slot.ID, errors.New("no availbale slot at this time")
 	}
@@ -50,23 +51,23 @@ func BookSlot(stid uint, slid uint) (uint, error) {
 	return booked.ID, nil
 }
 
-// get the booked slot
-func GetSlot(r *http.Request) (config.Slot, error) {
+//read slot
+func ReadBooked(r *http.Request) (config.Slot, bool) {
 	var slot config.Slot
-	id := r.URL.Query()["bid"][0]
-	bookingId, err := strconv.Atoi(id)
+	bid := r.URL.Query()["bid"][0] //get the booking id
+	bookingId, err := strconv.Atoi(bid)
 	if err != nil {
-		return slot, errors.New("invaid booking id")
+		return slot, false
 	}
 	var booked config.Booked
 	result := config.Database.Where("id = ?", uint(bookingId)).Find(&booked)
 	if result.Error != nil {
-		return slot, errors.New("transaction failed")
+		return slot, false
 	}
 	slotid := booked.SlotId
 	result1 := config.Database.Where("id = ?", slotid).Find(&slot)
 	if result1.Error != nil {
-		return slot, errors.New("transaction failed")
+		return slot, false
 	}
-	return slot, nil
+	return slot, true
 }
