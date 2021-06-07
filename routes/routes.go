@@ -13,9 +13,10 @@ func LoadRoutes() {
 	http.HandleFunc("/", index)
 
 	// User related route(s)
-	http.HandleFunc("/signup", controllers.Signup)
-	http.HandleFunc("/login", controllers.Login)
-	http.HandleFunc("/logout", controllers.Logout)
+	http.HandleFunc("/signup", controllers.Signup) //
+	http.HandleFunc("/login", controllers.Login)   //
+	http.HandleFunc("/logout", controllers.Logout) //
+
 	http.HandleFunc("/addSlot", controllers.AddSlot)
 	http.HandleFunc("/getUserSlots", controllers.GetUserSlots)
 	http.HandleFunc("/updateSlot", controllers.UpdateSlot)
@@ -29,6 +30,12 @@ func LoadRoutes() {
 	http.HandleFunc("/admin", controllers.Admin)
 
 	http.HandleFunc("/admindeletebooking", controllers.AdminDeleteBooking)
+
+	http.HandleFunc("/readallbookings", controllers.ReadAllBookings)
+
+	http.HandleFunc("/readallstudents", controllers.ReadAllStudents)
+
+	http.HandleFunc("/readallteachers", controllers.ReadAllTeachers)
 
 	// welcome page
 	// http.HandleFunc("/welcome", welcome)
