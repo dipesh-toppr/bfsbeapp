@@ -19,7 +19,7 @@ func ValidateTime(r *http.Request) (uint, error) {
 	if err != nil {
 		return uint(pt), errors.New("invalid time")
 	}
-	if pt <= hr || (pt == hr+1 && mn <= 59) {
+	if pt <= hr || (pt == hr+1 && mn > 0) {
 		return uint(pt), errors.New("booking not allowed at this time")
 	}
 	return uint(pt), nil

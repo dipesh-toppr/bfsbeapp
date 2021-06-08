@@ -88,7 +88,18 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
-		if e != nil || id < 2 {
+
+		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+
+		if !ok {
+			http.Error(w, "no user found", http.StatusForbidden)
+			fmt.Println("no user found")
+			return
+		}
+
+		//uid := user.Identity
+		fmt.Println(user)
+		if e != nil || user.Identity < "2" {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
@@ -98,7 +109,15 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return
 		}
-		json.NewEncoder(w).Encode(slot)
+		if len(slot) > 0 {
+			json.NewEncoder(w).Encode(slot)
+
+		} else {
+
+			w.Write([]byte("No bookings found"))
+
+		}
+
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -107,7 +126,19 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
-		if e != nil || id < 2 {
+
+		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+
+		if !ok {
+			http.Error(w, "no user found", http.StatusForbidden)
+			fmt.Println("no user found")
+			return
+		}
+
+		//uid := user.Identity
+		fmt.Println(user)
+
+		if e != nil || user.Identity < "2" {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
@@ -117,8 +148,18 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return
 		}
-		json.NewEncoder(w).Encode(teachers)
+
+		if len(teachers) > 0 {
+			json.NewEncoder(w).Encode(teachers)
+
+		} else {
+
+			w.Write([]byte("No teachers found"))
+
+		}
+
 		w.WriteHeader(http.StatusOK)
+
 	}
 }
 
@@ -126,7 +167,19 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
-		if e != nil || id < 2 {
+
+		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+
+		if !ok {
+			http.Error(w, "no user found", http.StatusForbidden)
+			fmt.Println("no user found")
+			return
+		}
+
+		//uid := user.Identity
+		fmt.Println(user)
+
+		if e != nil || user.Identity < "2" {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
@@ -136,7 +189,16 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return
 		}
-		json.NewEncoder(w).Encode(students)
+
+		if len(students) > 0 {
+			json.NewEncoder(w).Encode(students)
+
+		} else {
+
+			w.Write([]byte("No Students found"))
+
+		}
+
 		w.WriteHeader(http.StatusOK)
 	}
 }
