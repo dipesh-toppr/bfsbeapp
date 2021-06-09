@@ -11,15 +11,17 @@ import (
 )
 
 ///function to validate the timing
-func ValidateTime(r *http.Request) (uint, error) {
+func ValidateTime(w http.ResponseWriter, r *http.Request) (uint, error) {
 	tim := r.URL.Query()["time"][0]
 	hr := time.Now().Hour()
 	mn := time.Now().Minute()
 	pt, err := strconv.Atoi(tim)
 	if err != nil {
+		http.Error(w, "invalid time", http.StatusBadRequest)
 		return uint(pt), errors.New("invalid time")
 	}
 	if pt <= hr || (pt == hr+1 && mn > 0) {
+		http.Error(w, "booking not allowed at this time", http.StatusBadRequest)
 		return uint(pt), errors.New("booking not allowed at this time")
 	}
 	return uint(pt), nil
@@ -28,7 +30,7 @@ func ValidateTime(r *http.Request) (uint, error) {
 //check for available teacher
 func AvailSlot(tim uint) (uint, error) {
 	var slot models.Slot
-	tmp := Database.Where("available_slot = ? AND is_booked = ?", tim, 0).First(&slot)
+	tmp := Database.Where("available_slot = ? AND is_booked = ?", tim, false).First(&slot)
 
 	if tmp.Error != nil {
 		return slot.ID, errors.New("no availbale slot at this time")
@@ -41,7 +43,7 @@ func BookSlot(stid uint, slid uint) (uint, error) {
 	var booked models.Booked
 	booked.StudentId = stid
 	booked.SlotId = slid
-	result1 := Database.Model(&models.Slot{}).Where("id = ? ", slid).Update("is_booked", 1)
+	result1 := Database.Model(&models.Slot{}).Where("id = ? ", slid).Update("is_booked", true)
 	if result1.Error != nil {
 		return 0, errors.New(result1.Error.Error())
 	}
@@ -76,15 +78,32 @@ func ReadBooked(r *http.Request) (models.Slot, bool) {
 //check for already booked slot at a given time
 func IsAlreadyBooked(uid uint, tim uint) bool {
 	var booked []models.Booked
+	var slotid []uint
+	var slot models.Slot
 	Database.Where("student_id = ?", uid).Find(&booked)
 	for _, val := range booked {
-		var slot models.Slot
-		Database.Where("id = ?", val.SlotId).Find(&slot)
-		if slot.AvailableSlot == tim {
-			return true
-		}
+		slotid = append(slotid, val.SlotId)
 	}
-	return false
+	result := Database.Where("available_slot = ?", tim).Find(&slot, slotid)
+	return result.Error == nil
+}
+
+// find booking
+func FindBookingAndDelete(bid uint, sid uint) error {
+	var booked models.Booked
+	result1 := Database.Where("id = ? AND student_id= ?", bid, sid).Find(&booked)
+	if result1.Error != nil {
+		return errors.New("invalid booking id")
+	}
+	result2 := Database.Where("id = ?", booked.ID).Delete(&booked)
+	if result2.Error != nil {
+		return errors.New("internal database error")
+	}
+	result3 := Database.Model(&models.Slot{}).Where("id = ? ", booked.SlotId).Update("is_booked", false)
+	if result3.Error != nil {
+		return errors.New("internal database error")
+	}
+	return nil
 }
 func ReadStudents(r *http.Request) ([]models.User, bool) {
 

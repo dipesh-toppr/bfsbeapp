@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/managers"
-	"github.com/dipesh-toppr/bfsbeapp/models"
 	"github.com/dipesh-toppr/bfsbeapp/token"
 )
 
@@ -18,7 +17,6 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 		if e != nil {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
 		utype := managers.UserType(uint(id)) //checking type of user
@@ -26,10 +24,8 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "you are not allowed to book session!", http.StatusBadRequest)
 			return
 		}
-		tim, err := managers.ValidateTime(r)
-		print(tim, " ", err)
+		tim, err := managers.ValidateTime(w, r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		//check for already booking at this time
@@ -47,6 +43,7 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 		bookid, err := managers.BookSlot(uint(id), uint(slot))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		//send booking id to the user
 		msg := "booking ID : " + fmt.Sprint(bookid)
@@ -62,32 +59,17 @@ func DeleteBooking(w http.ResponseWriter, r *http.Request) {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 		if e != nil {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
 		bid := r.URL.Query()["bid"][0]
 		bkid, err2 := strconv.Atoi(bid)
 		if err2 != nil {
-			http.Error(w, "student_id OR booking_id should be a number", http.StatusBadRequest)
+			http.Error(w, "student_id or booking_id should be a number", http.StatusBadRequest)
 			return
 		}
-		var booked models.Booked
-		booked.ID = uint(bkid)
-		booked.StudentId = uint(id)
-		result3 := managers.Database.Where("id = ? AND student_id= ?", booked.ID, booked.StudentId).Find(&booked)
-		slot := booked.SlotId
-		if result3.Error != nil {
-			http.Error(w, "Invalid booking ID", http.StatusBadRequest)
-			return
-		}
-		result1 := managers.Database.Where("id = ?", booked.ID).Delete(&booked)
-		if result1.Error != nil {
-			http.Error(w, result1.Error.Error(), http.StatusInternalServerError)
-			return
-		}
-		result2 := managers.Database.Model(&models.Slot{}).Where("id = ? ", slot).Update("is_booked", 0)
-		if result2.Error != nil {
-			http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
+		ok := managers.FindBookingAndDelete(uint(bkid), uint(id))
+		if ok != nil {
+			http.Error(w, ok.Error(), http.StatusBadRequest)
 			return
 		}
 		w.Write([]byte("Booking Deleted!"))
@@ -102,7 +84,6 @@ func ReadBooking(w http.ResponseWriter, r *http.Request) {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 		if e != nil {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
 		slot, ok := managers.ReadBooked(r)
