@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/managers"
-	"github.com/dipesh-toppr/bfsbeapp/models"
 	"github.com/dipesh-toppr/bfsbeapp/token"
 )
 
@@ -29,22 +28,21 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
-			http.Error(w, "no user found", http.StatusForbidden)
-			fmt.Println("no user found")
+			http.Error(w, "no user found", http.StatusBadRequest)
 			return
 		}
 
 		uid := user.Identity //uid is identity of user ie stud,tech,admin,superadmin
 
-		fmt.Println("This is uid ", uid)
+		//fmt.Println("This is uid ", uid)
 
 		//finding the user detials to check his/her role
 
 		utodisable, ok := managers.FindUserFromId(idtodisable)
 
 		if !ok {
-			http.Error(w, "no user found", http.StatusForbidden)
-			fmt.Println("no user found")
+			http.Error(w, "no user found", http.StatusNotFound)
+			///	fmt.Println("no user found")
 			return
 		}
 
@@ -54,28 +52,28 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 				//if user iddentity is>= 2  means that active user is an admin or super admin & has rights to make any user inactive
 				u := managers.MakeInactive(idtodisable)
 				fmt.Print(u)
-				w.Write([]byte("user disabled\n"))
+				w.Write([]byte("User disabled\n"))
 				json.NewEncoder(w).Encode(u)
 				return
 
 			} else {
-				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
-				fmt.Print("You do not have the rights to make user inactive")
+				http.Error(w, "You do not have the rights to make admin inactive", http.StatusUnauthorized)
+				//fmt.Print("You do not have the rights to make user inactive")
 			}
 		} else if utodisable.Identity == 2 { //request to disable admin do only super admin can do so
 
 			if uid == 3 { //identity  of superadmin  kept 3
 				u := managers.MakeInactive(idtodisable)
 				fmt.Print(u)
-				w.Write([]byte("user disabled\n"))
+				w.Write([]byte("User disabled\n"))
 				json.NewEncoder(w).Encode(u)
 				return
 			} else {
-				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
+				http.Error(w, "You do not have the rights to make admin inactive", http.StatusUnauthorized)
 			}
 		}
 		if utodisable.Identity == 3 {
-			http.Error(w, "you cannot disable super admin", http.StatusBadRequest)
+			http.Error(w, "you cannot disable super admin", http.StatusUnauthorized)
 		}
 		// http.Redirect(w, r, "/", http.StatusOK)
 	}
@@ -85,14 +83,14 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 //admin read all bookings
 
 func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodPost {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
 		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
-			http.Error(w, "no user found", http.StatusForbidden)
+			http.Error(w, "no user found", http.StatusNotFound)
 			fmt.Println("no user found")
 			return
 		}
@@ -100,37 +98,31 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 		//uid := user.Identity
 		fmt.Println(user)
 		if e != nil || user.Identity < 2 {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			http.Error(w, "unauthorized request", http.StatusForbidden)
 			return
 		}
 
 		slot, ok := managers.ReadAdminBooked(r)
 		if !ok {
-			http.Error(w, "not found", http.StatusBadRequest)
+			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-		if len(slot) > 0 {
-			json.NewEncoder(w).Encode(slot)
 
-		} else {
-
-			w.Write([]byte("No bookings found"))
-
-		}
-
+		json.NewEncoder(w).Encode(slot)
 		w.WriteHeader(http.StatusOK)
+
 	}
 }
 
 func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodPost {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
 		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
-			http.Error(w, "no user found", http.StatusForbidden)
+			http.Error(w, "no user found", http.StatusNotFound)
 			fmt.Println("no user found")
 			return
 		}
@@ -139,24 +131,17 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(user)
 
 		if e != nil || user.Identity < 2 {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			http.Error(w, "unauthorized request", http.StatusForbidden)
 			return
 		}
 
 		teachers, ok := managers.ReadTeachers(r)
 		if !ok {
-			http.Error(w, "not found", http.StatusBadRequest)
+			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
 
-		if len(teachers) > 0 {
-			json.NewEncoder(w).Encode(teachers)
-
-		} else {
-
-			w.Write([]byte("No teachers found"))
-
-		}
+		json.NewEncoder(w).Encode(teachers)
 
 		w.WriteHeader(http.StatusOK)
 
@@ -164,14 +149,14 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodPost {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
 		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
-			http.Error(w, "no user found", http.StatusForbidden)
+			http.Error(w, "no user found", http.StatusNotFound)
 			fmt.Println("no user found")
 			return
 		}
@@ -180,24 +165,17 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(user)
 
 		if e != nil || user.Identity < 2 {
-			http.Error(w, "unauthorized request", http.StatusBadRequest)
+			http.Error(w, "unauthorized request", http.StatusForbidden)
 			return
 		}
 
 		students, ok := managers.ReadStudents(r)
 		if !ok {
-			http.Error(w, "not found", http.StatusBadRequest)
+			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
 
-		if len(students) > 0 {
-			json.NewEncoder(w).Encode(students)
-
-		} else {
-
-			w.Write([]byte("No Students found"))
-
-		}
+		json.NewEncoder(w).Encode(students)
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -206,61 +184,9 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 //admin delete booking
 
 func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodPost {
 
-		id, e := token.Parsetoken(w, r) //finding active user mail and if he is logged in
-
-		// print(e, "  ", mail) //for debugging
-
-		if e != nil {
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
-			return
-		}
-
-		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
-
-		if !ok {
-			http.Error(w, "no user found", http.StatusForbidden)
-			fmt.Println("no user found")
-			return
-		}
-
-		uid := user.Identity
-
-		if uid > 1 {
-			bid := r.URL.Query()["bid"][0]
-			bkid, err2 := strconv.Atoi(bid)
-			if err2 != nil {
-				http.Error(w, "student_id OR booking_id should be a number", http.StatusBadRequest)
-				return
-			}
-			var booked models.Booked
-			booked.ID = uint(bkid)
-			booked.StudentId = uint(id)
-			result3 := managers.Database.Where("id = ?", booked.ID).Find(&booked)
-			slot := booked.SlotId
-			if result3.Error != nil {
-				http.Error(w, "Invalid booking ID", http.StatusBadRequest)
-				return
-			}
-			result1 := managers.Database.Where("id = ?", booked.ID).Delete(&booked)
-			if result1.Error != nil {
-				http.Error(w, result1.Error.Error(), http.StatusInternalServerError)
-				return
-			}
-			result2 := managers.Database.Model(&models.Slot{}).Where("id = ? ", slot).Update("is_booked", 0)
-			if result2.Error != nil {
-				http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Write([]byte("Booking Deleted!"))
-			w.WriteHeader(http.StatusOK)
-			return
-
-		} else {
-			http.Error(w, "You are not authorised to cancel the booking", http.StatusBadRequest)
-			fmt.Println("You are not authorised to cancel the booking")
-		}
+		managers.AdminDeleteBook(w, r)
 
 	}
 }

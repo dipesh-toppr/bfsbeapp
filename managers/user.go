@@ -55,7 +55,7 @@ func validateUserForm(request *http.Request) (models.User, error) {
 		return user, errors.New("fields cannot be empty")
 	}
 
-	if valid(email) {
+	if valid(email) == false {
 		return user, errors.New("email is not valid")
 	}
 	_, err := CheckUser(email)
@@ -101,77 +101,6 @@ func FindUser(email string) (models.User, bool) {
 
 }
 
-func MakeInactive(id string) models.User {
-
-	user := models.User{}
-
-	user, ok := FindUserFromId(id)
-
-	identity := user.Identity
-
-	if identity == 1 { ///he is a student
-
-		var booked []models.Booked
-
-		result1 := Database.Where("student_id= ?", user.ID).Find(&booked)
-		if result1.Error != nil {
-
-			return user
-		}
-
-		for i := range booked {
-
-			result2 := Database.Model(&models.Slot{}).Where("id = ? ", booked[i].SlotId).Update("is_booked", 0)
-			if result2.Error != nil {
-				return user
-			}
-
-			result3 := Database.Delete(&booked[i])
-
-			if result3.Error != nil {
-				return user
-			}
-
-		}
-
-	} else if identity == 0 { ///he is teacher
-
-		var slots []models.Slot
-
-		result1 := Database.Where("teacher_id= ?", user.ID).Find(&slots)
-		if result1.Error != nil {
-
-			return user
-		}
-
-		for i := range slots {
-			result2 := Database.Model(&models.Booked{}).Where("slot_id = ? ", slots[i].ID).Delete(&models.Booked{})
-			if result2.Error != nil {
-
-				return user
-			}
-
-			result3 := Database.Delete(&slots[i])
-
-			if result3.Error != nil {
-				return user
-
-			}
-		}
-
-		if !ok {
-			fmt.Println("Logined Failed")
-			return user
-		}
-	} else {
-		fmt.Println("he is an admin/superadmin")
-	}
-
-	Database.Model(&user).Update("isdisabled", 1)
-
-	return user
-}
-
 func FindUserFromId(id string) (models.User, bool) {
 
 	user := models.User{}
@@ -215,5 +144,9 @@ func UserType(uid uint) int {
 // check validity of the email.
 func valid(email string) bool {
 	_, err := mail.ParseAddress(email)
-	return err == nil
+	if err == nil {
+		return true
+	} else {
+		return false
+	}
 }
