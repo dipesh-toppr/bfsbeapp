@@ -31,13 +31,14 @@ func Createtoken(u models.User, w http.ResponseWriter) error {
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
 		// If there is an error in creating the JWT return an internal server error
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  "token",
-		Value: tokenString,
+		Name:     "token",
+		Value:    tokenString,
+		HttpOnly: true,
 	})
 
 	return nil
@@ -50,11 +51,11 @@ func Parsetoken(w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		if err == http.ErrNoCookie {
 			// If the cookie is not set, return an unauthorized status
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return 0, err
 		}
 		// For any other type of error, return a bad request status
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return 0, err
 	}
 
@@ -73,14 +74,14 @@ func Parsetoken(w http.ResponseWriter, r *http.Request) (int, error) {
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return 0, err
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return 0, err
 	}
 	if !tkn.Valid {
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return 0, errors.New("TOKEN NOT VALID")
 	}
 

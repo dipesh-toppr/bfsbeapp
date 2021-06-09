@@ -48,9 +48,9 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if utodisable.Identity < "2" { ///means he is stud or teacher so can be made inactive my both admin and super admin
+		if utodisable.Identity < 2 { ///means he is stud or teacher so can be made inactive my both admin and super admin
 
-			if uid >= "2" {
+			if uid >= 2 {
 				//if user iddentity is>= 2  means that active user is an admin or super admin & has rights to make any user inactive
 				u := managers.MakeInactive(idtodisable)
 				fmt.Print(u)
@@ -62,9 +62,9 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
 				fmt.Print("You do not have the rights to make user inactive")
 			}
-		} else if utodisable.Identity == "2" { //request to disable admin do only super admin can do so
+		} else if utodisable.Identity == 2 { //request to disable admin do only super admin can do so
 
-			if uid == "3" { //identity  of superadmin  kept 3
+			if uid == 3 { //identity  of superadmin  kept 3
 				u := managers.MakeInactive(idtodisable)
 				fmt.Print(u)
 				w.Write([]byte("user disabled\n"))
@@ -74,7 +74,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "You do not have the rights to make admin inactive", http.StatusBadRequest)
 			}
 		}
-		if utodisable.Identity == "3" {
+		if utodisable.Identity == 3 {
 			http.Error(w, "you cannot disable super admin", http.StatusBadRequest)
 		}
 		// http.Redirect(w, r, "/", http.StatusOK)
@@ -99,7 +99,7 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 
 		//uid := user.Identity
 		fmt.Println(user)
-		if e != nil || user.Identity < "2" {
+		if e != nil || user.Identity < 2 {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
@@ -138,7 +138,7 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 		//uid := user.Identity
 		fmt.Println(user)
 
-		if e != nil || user.Identity < "2" {
+		if e != nil || user.Identity < 2 {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
@@ -179,7 +179,7 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 		//uid := user.Identity
 		fmt.Println(user)
 
-		if e != nil || user.Identity < "2" {
+		if e != nil || user.Identity < 2 {
 			http.Error(w, "unauthorized request", http.StatusBadRequest)
 			return
 		}
@@ -227,7 +227,7 @@ func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 
 		uid := user.Identity
 
-		if uid > "1" {
+		if uid > 1 {
 			bid := r.URL.Query()["bid"][0]
 			bkid, err2 := strconv.Atoi(bid)
 			if err2 != nil {

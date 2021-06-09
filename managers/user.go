@@ -66,8 +66,8 @@ func validateUserForm(r *http.Request) (models.User, error) {
 	u.Firstname = f
 	u.Lastname = l
 	u.Password = p
-	u.Identity = i
-	u.Isdisabled = "0"
+	u.Identity, _ = strconv.Atoi(i)
+	u.Isdisabled = false
 
 	return u, nil
 
@@ -109,7 +109,7 @@ func MakeInactive(id string) models.User {
 	fmt.Println(iden)
 	fmt.Println(u)
 
-	if iden == "1" { ///he is a student
+	if iden == 1 { ///he is a student
 
 		var booked []models.Booked
 
@@ -139,7 +139,7 @@ func MakeInactive(id string) models.User {
 
 		}
 
-	} else if iden == "0" { ///he is teacher
+	} else if iden == 0 { ///he is teacher
 
 		var slots []models.Slot
 
@@ -178,9 +178,9 @@ func MakeInactive(id string) models.User {
 		fmt.Println("he is an admin/superadmin")
 	}
 
-	//db.Model(&u).Update("isdisabled", "0")
+	//db.Model(&u).Update("isdisabled", 0)
 
-	Database.Model(&u).Update("isdisabled", "1")
+	Database.Model(&u).Update("isdisabled", 1)
 
 	return u
 }
@@ -202,7 +202,7 @@ func IsDisabled(u models.User) (bool, error) {
 
 	fmt.Print(u.Isdisabled)
 
-	if u.Isdisabled == "1" {
+	if u.Isdisabled == true {
 		return true, errors.New("user is disabled  by admin")
 	}
 
@@ -219,7 +219,7 @@ func ValidatePassword(u models.User, p string) bool {
 }
 
 //find the type of user
-func UserType(uid uint) string {
+func UserType(uid uint) int {
 	var user models.User
 	Database.Where("id = ?", uid).Find(&user)
 	return user.Identity

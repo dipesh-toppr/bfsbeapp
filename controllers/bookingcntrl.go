@@ -22,7 +22,7 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		utype := managers.UserType(uint(id)) //checking type of user
-		if utype != "1" {
+		if utype != 1 {
 			http.Error(w, "you are not allowed to book session!", http.StatusBadRequest)
 			return
 		}
