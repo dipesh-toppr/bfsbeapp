@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dipesh-toppr/bfsbeapp/managers"
 	"github.com/dipesh-toppr/bfsbeapp/models"
 	"github.com/dipesh-toppr/bfsbeapp/token"
 )
@@ -15,7 +16,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	// process form submission
 	if r.Method == http.MethodPost {
 		var u models.User
-		u, err := models.SaveUser(r)
+		u, err := managers.SaveUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			fmt.Println("SignUp Failed")
@@ -47,14 +48,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		e := r.FormValue("email")
 
 		// check if the user exists
-		u, ok := models.FindUser(e)
+		u, ok := managers.FindUser(e)
 		if !ok {
 			http.Error(w, "username and/or password do not match", http.StatusForbidden)
 			fmt.Println("Logined Failed")
 			return
 		}
 
-		d, _ := models.IsDisabled(u)
+		d, _ := managers.IsDisabled(u)
 		if d {
 			// http.Error(w, err.Error(), http.StatusForbidden)
 			http.Error(w, "user is disabled by admin....", http.StatusForbidden)
@@ -62,7 +63,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !u.ValidatePassword(p) {
+		if !managers.ValidatePassword(u, p) {
 			http.Error(w, "username and/or password do not match", http.StatusForbidden)
 			fmt.Println("Logined Failed")
 			return

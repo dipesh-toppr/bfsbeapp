@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 
-	"github.com/dipesh-toppr/bfsbeapp/config"
+	"github.com/dipesh-toppr/bfsbeapp/managers"
 	"github.com/dipesh-toppr/bfsbeapp/routes"
 )
 
 // Application starts here.
 func main() {
-	db := config.Database
+	db := managers.Database
 
 	routes.LoadRoutes()
 

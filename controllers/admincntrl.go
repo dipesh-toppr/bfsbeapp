@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dipesh-toppr/bfsbeapp/config"
+	"github.com/dipesh-toppr/bfsbeapp/managers"
 	"github.com/dipesh-toppr/bfsbeapp/models"
 	"github.com/dipesh-toppr/bfsbeapp/token"
 )
@@ -26,7 +26,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -40,7 +40,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 
 		//finding the user detials to check his/her role
 
-		utodisable, ok := models.FindUserFromId(idtodisable)
+		utodisable, ok := managers.FindUserFromId(idtodisable)
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -52,7 +52,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 
 			if uid >= "2" {
 				//if user iddentity is>= 2  means that active user is an admin or super admin & has rights to make any user inactive
-				u := models.MakeInactive(idtodisable)
+				u := managers.MakeInactive(idtodisable)
 				fmt.Print(u)
 				w.Write([]byte("user disabled\n"))
 				json.NewEncoder(w).Encode(u)
@@ -65,7 +65,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 		} else if utodisable.Identity == "2" { //request to disable admin do only super admin can do so
 
 			if uid == "3" { //identity  of superadmin  kept 3
-				u := models.MakeInactive(idtodisable)
+				u := managers.MakeInactive(idtodisable)
 				fmt.Print(u)
 				w.Write([]byte("user disabled\n"))
 				json.NewEncoder(w).Encode(u)
@@ -89,7 +89,7 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
-		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -104,7 +104,7 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		slot, ok := models.ReadAdminBooked(r)
+		slot, ok := managers.ReadAdminBooked(r)
 		if !ok {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return
@@ -127,7 +127,7 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
-		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -143,7 +143,7 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		teachers, ok := models.ReadTeachers(r)
+		teachers, ok := managers.ReadTeachers(r)
 		if !ok {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return
@@ -168,7 +168,7 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
-		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -184,7 +184,7 @@ func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		students, ok := models.ReadStudents(r)
+		students, ok := managers.ReadStudents(r)
 		if !ok {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return
@@ -217,7 +217,7 @@ func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, ok := models.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
+		user, ok := managers.FindUserFromId(strconv.Itoa(int(id))) //find the user from id
 
 		if !ok {
 			http.Error(w, "no user found", http.StatusForbidden)
@@ -234,21 +234,21 @@ func AdminDeleteBooking(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "student_id OR booking_id should be a number", http.StatusBadRequest)
 				return
 			}
-			var booked config.Booked
+			var booked models.Booked
 			booked.ID = uint(bkid)
 			booked.StudentId = uint(id)
-			result3 := config.Database.Where("id = ?", booked.ID).Find(&booked)
+			result3 := managers.Database.Where("id = ?", booked.ID).Find(&booked)
 			slot := booked.SlotId
 			if result3.Error != nil {
 				http.Error(w, "Invalid booking ID", http.StatusBadRequest)
 				return
 			}
-			result1 := config.Database.Where("id = ?", booked.ID).Delete(&booked)
+			result1 := managers.Database.Where("id = ?", booked.ID).Delete(&booked)
 			if result1.Error != nil {
 				http.Error(w, result1.Error.Error(), http.StatusInternalServerError)
 				return
 			}
-			result2 := config.Database.Model(&models.Slot{}).Where("id = ? ", slot).Update("is_booked", 0)
+			result2 := managers.Database.Model(&models.Slot{}).Where("id = ? ", slot).Update("is_booked", 0)
 			if result2.Error != nil {
 				http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
 				return
