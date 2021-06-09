@@ -8,15 +8,17 @@ import (
 	"github.com/dipesh-toppr/bfsbeapp/models"
 )
 
-func SaveSlot(r *http.Request, id int) (models.Slot, error) {
+func SaveSlot(w http.ResponseWriter, r *http.Request, id int) (models.Slot, error) {
 	//to validate the data
 	s, err := validateSlotForm(r, uint(id))
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return s, err
 	}
 	s.TeacherId = uint(id)
-	if Database.Create(&s).Error != nil {
-		return s, errors.New("unable to process the transaction")
+	if e := Database.Create(&s).Error; e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+		return s, errors.New("x")
 	}
 
 	return s, nil
@@ -37,7 +39,74 @@ func validateSlotForm(r *http.Request, id uint) (models.Slot, error) {
 
 	//checking if there is already a slot available in the db to avoid duplicate entries
 	if Database.Find(&models.Slot{}, s).Error == nil {
-		return models.Slot{}, errors.New("models.Slot already exits")
+		return models.Slot{}, errors.New("slot already exits")
 	}
 	return s, nil
+}
+func FindUserWithId(w http.ResponseWriter, id int) (u models.User, e error) {
+	e = Database.Find(&u, "id=?", id).Error
+	if (u == models.User{}) {
+		http.Error(w, "", http.StatusNotFound)
+		return
+	}
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+func FindSlotWithTeacherId(w http.ResponseWriter, id int) (slots []models.Slot, e error) {
+	e = Database.Find(&slots, "teacher_id=?", id).Error
+	if len(slots) == 0 {
+		http.Error(w, "", http.StatusNotFound)
+		return
+	}
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+
+func FindSlotWithId(w http.ResponseWriter, slotId string) (s models.Slot, e error) {
+	e = Database.Find(&s, "id=?", slotId).Error
+	if (s == models.Slot{}) {
+		http.Error(w, "", http.StatusNotFound)
+		return
+	}
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+
+func FindSlotWithInfo(w http.ResponseWriter, teachID, newSlot int) (s models.Slot, e error) {
+	e = Database.Find(&models.Slot{}, "teacher_id=? AND available_slot=?", teachID, newSlot).Error
+	if (s == models.Slot{}) {
+		http.Error(w, "", http.StatusNotFound)
+		return
+	}
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+func UpdateSlot(w http.ResponseWriter, slotId string, newSlot int) (e error) {
+	e = Database.Model(&models.Slot{}).Where("id=?", slotId).Update("available_slot", newSlot).Error
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+func DistinctSlots(w http.ResponseWriter) (slots []models.Slot, e error) {
+	e = Database.Raw("SELECT * FROM slots WHERE is_booked=? ORDER BY available_slot", 0).Scan(&slots).Error
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+func DeleteSlot(w http.ResponseWriter, s models.Slot) (e error) {
+	e = Database.Delete(&s).Error
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	return
 }

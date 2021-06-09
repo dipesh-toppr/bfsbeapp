@@ -55,7 +55,7 @@ func validateUserForm(request *http.Request) (models.User, error) {
 		return user, errors.New("fields cannot be empty")
 	}
 
-	if valid(email) == false {
+	if !valid(email) {
 		return user, errors.New("email is not valid")
 	}
 	_, err := CheckUser(email)
@@ -144,9 +144,5 @@ func UserType(uid uint) int {
 // check validity of the email.
 func valid(email string) bool {
 	_, err := mail.ParseAddress(email)
-	if err == nil {
-		return true
-	} else {
-		return false
-	}
+	return err == nil
 }
