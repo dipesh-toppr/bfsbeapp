@@ -24,7 +24,7 @@ func AddSlot(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "unable to process the transaction", http.StatusBadGateway)
 			return
 		}
-		if teach.Identity != strconv.Itoa(0) {
+		if teach.Identity != (0) {
 			http.Error(w, "Only teacher can add time slots", http.StatusBadGateway)
 			return
 		}
