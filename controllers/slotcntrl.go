@@ -24,11 +24,10 @@ func AddSlot(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user.Identity != (0) {
-			http.Error(w, "Only teacher can add time slots", http.StatusBadGateway)
+			http.Error(w, "Only teacher can add time slots", http.StatusBadRequest)
 			return
 		}
 		//saving the slot in the database
-		fmt.Println("hello")
 		s, err := managers.SaveSlot(w, r, id)
 		if err != nil {
 			return
@@ -76,6 +75,10 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 		}
 		s, e := managers.FindSlotWithId(w, slotId)
 		if e != nil {
+			return
+		}
+		if s.IsBooked {
+			http.Error(w, "you cannot update a booked slot, delete and create new slot", http.StatusForbidden)
 			return
 		}
 		teachID := s.TeacherId
@@ -143,7 +146,7 @@ func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 
 		teachId := s.TeacherId
 		if teachId != uint(id) {
-			http.Error(w, "you cannot delete other teacher's slots", http.StatusBadRequest)
+			http.Error(w, "you cannot delete other teacher's slots", http.StatusForbidden)
 			return
 		}
 		er := managers.DeleteSlot(w, s)
