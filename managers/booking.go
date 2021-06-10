@@ -29,9 +29,9 @@ func AvailSlot(date string) ([]models.Slot, error) {
 	CurrTime := time.Now().Hour()
 	minute := time.Now().Minute()
 	var TimeToSearch uint
-	TimeToSearch = uint(CurrTime + 2)
+	TimeToSearch = uint(CurrTime + 1)
 	if minute == 0 {
-		TimeToSearch = uint(CurrTime + 1)
+		TimeToSearch = uint(CurrTime)
 	}
 	tmp := Database.Where("available_slot > ? AND is_booked = ? AND date = ?", TimeToSearch, false, date).Find(&slots)
 
