@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/managers"
-	"github.com/dipesh-toppr/bfsbeapp/models"
 	"github.com/dipesh-toppr/bfsbeapp/token"
 )
 
@@ -16,22 +16,20 @@ func AddSlot(w http.ResponseWriter, r *http.Request) {
 		//user authentication
 		id, e := token.Parsetoken(w, r)
 		if e != nil {
-			http.Error(w, "authentication failed", http.StatusBadRequest)
 			return
 		}
-		teach := models.User{}
-		if managers.Database.Where("id=?", id).First(&teach).Error != nil {
-			http.Error(w, "unable to process the transaction", http.StatusBadGateway)
+		user, e := managers.FindUserWithId(w, id)
+		fmt.Println(user)
+		if e != nil {
 			return
 		}
-		if teach.Identity != (0) {
-			http.Error(w, "Only teacher can add time slots", http.StatusBadGateway)
+		if user.Identity != (0) {
+			http.Error(w, "Only teacher can add time slots", http.StatusBadRequest)
 			return
 		}
 		//saving the slot in the database
-		s, err := managers.SaveSlot(r, id)
+		s, err := managers.SaveSlot(w, r, id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		w.Write([]byte("slot created sucessfully\n"))
@@ -48,13 +46,11 @@ func GetUserSlots(w http.ResponseWriter, r *http.Request) {
 		//user authentication
 		id, e := token.Parsetoken(w, r)
 		if e != nil {
-			http.Error(w, "authentication failed", http.StatusBadRequest)
+			return
 		}
-
-		slots := []models.Slot{}
+		slots, e := managers.FindSlotWithTeacherId(w, id)
 		//getting the slots of the user
-		if e = managers.Database.Find(&slots, "teacher_id=?", id).Error; e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
+		if e != nil {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -75,21 +71,28 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 		slotId := r.FormValue("slot_id")
 		newSlot, _ := strconv.Atoi(r.FormValue("new_slot"))
 		if e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
 		}
-		s := models.Slot{}
-		managers.Database.Find(&s, "id=?", slotId)
+		s, e := managers.FindSlotWithId(w, slotId)
+		if e != nil {
+			return
+		}
+		if s.IsBooked {
+			http.Error(w, "you cannot update a booked slot, delete and create new slot", http.StatusForbidden)
+			return
+		}
 		teachID := s.TeacherId
 		if teachID != uint(id) {
-			http.Error(w, "authentication failed", http.StatusBadRequest)
+			http.Error(w, "you can only update your slots", http.StatusBadRequest)
 			return
 		}
-		if managers.Database.Find(&models.Slot{}, "teacher_id=? AND available_slot=?", teachID, newSlot).Error == nil {
-			http.Error(w, "models.Slot already exists", http.StatusBadRequest)
+		_, err := managers.FindSlotWithInfo(w, int(teachID), newSlot)
+		if err == nil {
+			http.Error(w, "Slot already exists", http.StatusBadRequest)
 			return
 		}
-		if e := managers.Database.Model(&models.Slot{}).Where("id=?", slotId).Update("available_slot", newSlot).Error; e != nil {
-			http.Error(w, e.Error(), http.StatusExpectationFailed)
+		er := managers.UpdateSlot(w, slotId, newSlot)
+		if er != nil {
 			return
 		}
 		s.AvailableSlot = uint(newSlot)
@@ -103,14 +106,13 @@ func GetUniqueSlots(w http.ResponseWriter, r *http.Request) {
 		//user authentication
 		_, e := token.Parsetoken(w, r)
 		if e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
 		}
 
-		slots := []models.Slot{}
+		slots, e := managers.DistinctSlots(w)
 		as := make(map[int]bool)
 
-		if e := managers.Database.Raw("SELECT * FROM slots WHERE is_booked=? ORDER BY available_slot", 0).Scan(&slots).Error; e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
+		if e != nil {
 			return
 		}
 		keys := []int{}
@@ -134,18 +136,21 @@ func DeleteSlot(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodDelete {
 		id, e := token.Parsetoken(w, r)
 		if e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
-		}
-		slotId := r.FormValue("DEL_slot")
-		s := models.Slot{}
-		managers.Database.Find(&s, "id=?", slotId)
-		teachId := s.TeacherId
-		if teachId != uint(id) {
-			http.Error(w, "authentication failed", http.StatusBadRequest)
 			return
 		}
-		if e := managers.Database.Delete(&s).Error; e != nil {
-			http.Error(w, e.Error(), http.StatusBadRequest)
+		slotId := r.FormValue("DEL_slot")
+		s, e := managers.FindSlotWithId(w, slotId)
+		if e != nil {
+			return
+		}
+
+		teachId := s.TeacherId
+		if teachId != uint(id) {
+			http.Error(w, "you cannot delete other teacher's slots", http.StatusForbidden)
+			return
+		}
+		er := managers.DeleteSlot(w, s)
+		if er != nil {
 			return
 		}
 		json.NewEncoder(w).Encode(s)

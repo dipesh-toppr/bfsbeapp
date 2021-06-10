@@ -2,7 +2,8 @@ package managers
 
 import (
 	"errors"
-	"fmt"
+
+	//"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -104,36 +105,4 @@ func FindBookingAndDelete(bid uint, sid uint) error {
 		return errors.New("internal database error")
 	}
 	return nil
-}
-func ReadStudents(r *http.Request) ([]models.User, bool) {
-
-	var stud []models.User
-	result := Database.Where("identity = ?", uint(1)).Find(&stud)
-	if result.Error != nil {
-		return stud, false
-	}
-	fmt.Print(stud)
-	return stud, true
-}
-
-func ReadTeachers(r *http.Request) ([]models.User, bool) {
-
-	var teach []models.User
-	result := Database.Where("identity = ?", uint(0)).Find(&teach)
-	if result.Error != nil {
-		return teach, false
-	}
-	fmt.Print(teach)
-	return teach, true
-}
-
-func ReadAdminBooked(r *http.Request) ([]models.Booked, bool) {
-
-	var booked []models.Booked
-	result := Database.Find(&booked)
-	if result.Error != nil {
-		return booked, false
-	}
-
-	return booked, true
 }

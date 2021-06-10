@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/mail"
 	"strconv"
 
 	"github.com/dipesh-toppr/bfsbeapp/models"
@@ -14,195 +15,110 @@ import (
 func SaveUser(r *http.Request) (models.User, error) {
 
 	// Get form values and validate
-	u, err := validateUserForm(r)
+	user, err := validateUserForm(r)
 
 	if err != nil {
-		return u, err
+		return user, err
 	}
 
-	bs, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.MinCost)
+	bs, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.MinCost)
 
 	if err != nil {
-		return u, errors.New("the provided password is not valid")
+		return user, errors.New("the provided password is not valid")
 	}
 
-	u.Password = string(bs)
+	user.Password = string(bs)
 
-	if Database.Create(&u).Error != nil {
-		return u, errors.New("unable to process registration")
+	if Database.Create(&user).Error != nil {
+		return user, errors.New("unable to process registration")
 	}
-	return u, nil
+	return user, nil
 }
 
 // ValidateForm validates the submitted form for registration
-func validateUserForm(r *http.Request) (models.User, error) {
+func validateUserForm(request *http.Request) (models.User, error) {
 
-	u := models.User{}
-	e := r.FormValue("email")
-	p := r.FormValue("password")
-	cp := r.FormValue("cpassword")
-	f := r.FormValue("firstname")
-	l := r.FormValue("lastname")
+	user := models.User{}
+	email := request.FormValue("email")
+	password := request.FormValue("password")
+	confirmpassword := request.FormValue("cpassword")
+	firstname := request.FormValue("firstname")
+	lastname := request.FormValue("lastname")
 
-	i := r.FormValue("identity")
-	fmt.Println("hii")
-	fmt.Println(f)
+	identity := request.FormValue("identity")
 
-	if p != cp {
-		return u, errors.New("password does not match")
+	if password != confirmpassword {
+		return user, errors.New("password does not match")
 	}
 
-	if e == "" || p == "" || cp == "" || i == "" {
-		return u, errors.New("fields cannot be empty")
+	if email == "" || password == "" || confirmpassword == "" || identity == "" {
+		return user, errors.New("fields cannot be empty")
 	}
 
-	_, err := CheckUser(e)
+	if !valid(email) {
+		return user, errors.New("email is not valid")
+	}
+	_, err := CheckUser(email)
 
 	if err != nil {
-		return u, err
+		return user, err
 	}
 
-	u.Email = e
-	u.Firstname = f
-	u.Lastname = l
-	u.Password = p
-	u.Identity, _ = strconv.Atoi(i)
-	u.Isdisabled = false
+	user.Email = email
+	user.Firstname = firstname
+	user.Lastname = lastname
+	user.Password = password
+	user.Identity, _ = strconv.Atoi(identity)
+	user.Isdisabled = false
 
-	return u, nil
+	return user, nil
 
 }
 
 // CheckUser looks for existing user using email
 func CheckUser(email string) (models.User, error) {
 
-	usr, ok := FindUser(email)
+	user, ok := FindUser(email)
 
 	if ok {
-		return usr, errors.New("email is already taken")
+		return user, errors.New("email is already taken")
 	}
 
-	return usr, nil
+	return user, nil
 
 }
 
 // FindUser looks for registerd user by email.
 func FindUser(email string) (models.User, bool) {
 
-	u := models.User{}
+	user := models.User{}
 
-	if Database.Where(&models.User{Email: email}).Find(&u).Error != nil {
-		return u, false
+	if Database.Where(&models.User{Email: email}).Find(&user).Error != nil {
+		return user, false
 	}
 
-	return u, true
+	return user, true
 
-}
-
-func MakeInactive(id string) models.User {
-
-	u := models.User{}
-
-	u, ok := FindUserFromId(id)
-
-	iden := u.Identity
-	fmt.Println(iden)
-	fmt.Println(u)
-
-	if iden == 1 { ///he is a student
-
-		var booked []models.Booked
-
-		result1 := Database.Where("student_id= ?", u.ID).Find(&booked)
-		if result1.Error != nil {
-
-			return u
-		}
-
-		fmt.Println(booked)
-
-		//result2 := Database.Where("slot_id= ?",booked.SlotId).Find(&booked)
-		for i := range booked {
-
-			result2 := Database.Model(&models.Slot{}).Where("id = ? ", booked[i].SlotId).Update("is_booked", 0)
-			if result2.Error != nil {
-				//	http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
-				return u
-			}
-
-			result3 := Database.Delete(&booked[i])
-
-			if result3.Error != nil {
-				//http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
-				return u
-			}
-
-		}
-
-	} else if iden == 0 { ///he is teacher
-
-		var slots []models.Slot
-
-		result1 := Database.Where("teacher_id= ?", u.ID).Find(&slots)
-		if result1.Error != nil {
-
-			return u
-		}
-
-		fmt.Println(slots)
-
-		//result2 := Database.Where("slot_id= ?",booked.SlotId).Find(&booked)
-		for i := range slots {
-			result2 := Database.Model(&models.Booked{}).Where("slot_id = ? ", slots[i].ID).Delete(&models.Booked{})
-			if result2.Error != nil {
-
-				return u
-			}
-
-			result3 := Database.Delete(&slots[i])
-
-			if result3.Error != nil {
-				//http.Error(w, result2.Error.Error(), http.StatusInternalServerError)
-				return u
-
-			}
-		}
-
-		if !ok {
-			//http.Error(w, "username does not exits", http.StatusForbidden)
-			fmt.Println("Logined Failed")
-			return u
-		}
-	} else {
-
-		fmt.Println("he is an admin/superadmin")
-	}
-
-	//db.Model(&u).Update("isdisabled", 0)
-
-	Database.Model(&u).Update("isdisabled", 1)
-
-	return u
 }
 
 func FindUserFromId(id string) (models.User, bool) {
 
-	u := models.User{}
+	user := models.User{}
 
 	i, _ := strconv.Atoi(id)
-	if Database.Where(&models.User{ID: i}).Find(&u).Error != nil {
-		return u, false
+	if Database.Where(&models.User{ID: i}).Find(&user).Error != nil {
+		return user, false
 	}
 
-	return u, true
+	return user, true
 
 }
 
-func IsDisabled(u models.User) (bool, error) {
+func IsDisabled(user models.User) (bool, error) {
 
-	fmt.Print(u.Isdisabled)
+	fmt.Print(user.Isdisabled)
 
-	if u.Isdisabled == true {
+	if user.Isdisabled {
 		return true, errors.New("user is disabled  by admin")
 	}
 
@@ -210,9 +126,9 @@ func IsDisabled(u models.User) (bool, error) {
 }
 
 // ValidatePassword validates the input password against the one in the database.
-func ValidatePassword(u models.User, p string) bool {
+func ValidatePassword(user models.User, password string) bool {
 
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(p))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	return err == nil
 
@@ -223,4 +139,10 @@ func UserType(uid uint) int {
 	var user models.User
 	Database.Where("id = ?", uid).Find(&user)
 	return user.Identity
+}
+
+// check validity of the email.
+func valid(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
