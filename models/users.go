@@ -11,6 +11,6 @@ type User struct {
 }
 
 var IDENTITY = map[string]string{
-	"teacher": "1",
-	"student": "0",
+	"teacher": "0",
+	"student": "1",
 }

@@ -53,9 +53,9 @@ func Login(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		disable, _ := managers.IsDisabled(user)
+		disable, err := managers.IsDisabled(user)
 		if disable {
-			http.Error(response, "user is disabled by admin....", http.StatusForbidden)
+			http.Error(response, err.Error(), http.StatusForbidden)
 			return
 		}
 

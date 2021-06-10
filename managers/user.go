@@ -31,7 +31,7 @@ func ValidateUserFormSignup(request *http.Request, response http.ResponseWriter)
 		return validparams, errors.New("password does not match")
 	}
 
-	if identity != models.IDENTITY["teacher"] || identity != models.IDENTITY["student"] {
+	if identity != models.IDENTITY["teacher"] && identity != models.IDENTITY["student"] {
 		return validparams, errors.New("wrong identity passed")
 	}
 
@@ -71,13 +71,13 @@ func FindUser(email string) (models.User, bool) {
 // SaveUser create new user entry.
 func SaveUser(validparams map[string]interface{}) (models.User, error) {
 
-	bctyptpassword, err := bcrypt.GenerateFromPassword([]byte(validparams["password"].(string)), bcrypt.MinCost)
+	bctyptpassword, err := bcrypt.GenerateFromPassword([]byte(validparams["Password"].(string)), bcrypt.MinCost)
 
 	if err != nil {
 		return models.User{}, errors.New("the provided password is not valid")
 	}
 
-	validparams["password"] = string(bctyptpassword)
+	validparams["Password"] = string(bctyptpassword)
 	user, err := CreateUser(validparams)
 
 	if err != nil {
