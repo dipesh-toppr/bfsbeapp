@@ -132,40 +132,42 @@ func DistinctSlots(w http.ResponseWriter) (slots []models.Slot, e error) {
 // 	return uint(pt), nil
 // }
 func DeleteSlot(w http.ResponseWriter, s models.Slot) (e error) {
-	slots := []models.Slot{}
-	if er := Database.Find(&slots, "available_slot=? AND is_booked=?", s.AvailableSlot, 0).Error; er != nil {
-		http.Error(w, e.Error(), http.StatusInternalServerError)
-		return
-	}
-	if len(slots) == 0 {
-		http.Error(w, "you cannot delete this slot as there is no other teacher to cover for you", http.StatusForbidden)
-		e = errors.New("_")
-		return
-	}
-	// tim, err := validateTime(int(s.AvailableSlot))
-	// print(tim, " ", err)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	e = errors.New("_")
-	// 	return
-	// }
-	slot := slots[0]
-	fmt.Println(slot)
-	if Database.Model(&models.Slot{}).Where("id = ? ", slot.ID).Update("is_booked", true).Error != nil {
-		http.Error(w, e.Error(), http.StatusInternalServerError)
-		e = errors.New("_")
-		return
-	}
-	if Database.Model(&models.Booked{}).Where("slot_id=?", s.ID).Update("slot_id", slot.ID).Error != nil {
-		http.Error(w, e.Error(), http.StatusInternalServerError)
-		e = errors.New("_")
-		return
+	if s.IsBooked {
+		slots := []models.Slot{}
+		CurrTime := time.Now().Hour()
+		minute := time.Now().Minute()
+		TimeDiff := s.AvailableSlot - uint(CurrTime)
+		if minute == 0 && TimeDiff < 1 {
+			http.Error(w, "you cannot delete a slot before 1 hour", http.StatusForbidden)
+			return errors.New("_")
+		}
+		if TimeDiff < 2 {
+			http.Error(w, "you cannot delete a slot before 1 hour", http.StatusForbidden)
+			return errors.New("_")
+		}
+		if er := Database.Find(&slots, "available_slot=? AND is_booked=? AND date=?", s.AvailableSlot, 0, s.Date).Error; er != nil {
+			http.Error(w, e.Error(), http.StatusInternalServerError)
+			return errors.New("_")
+		}
+		if len(slots) == 0 {
+			http.Error(w, "you cannot delete this slot as there is no other teacher to cover for you", http.StatusForbidden)
+			return errors.New("_")
+		}
+		slot := slots[0]
+		fmt.Println(slot)
+		if Database.Model(&models.Slot{}).Where("id = ? ", slot.ID).Update("is_booked", true).Error != nil {
+			http.Error(w, e.Error(), http.StatusInternalServerError)
+			return errors.New("_")
+		}
+		if Database.Model(&models.Booked{}).Where("slot_id=?", s.ID).Update("slot_id", slot.ID).Error != nil {
+			http.Error(w, e.Error(), http.StatusInternalServerError)
+			return errors.New("_")
+		}
 	}
 	e = Database.Delete(&s).Error
 	if e != nil {
 		http.Error(w, e.Error(), http.StatusInternalServerError)
-		e = errors.New("_")
-		return
+		return errors.New("_")
 	}
 	w.WriteHeader(http.StatusOK)
 	return
