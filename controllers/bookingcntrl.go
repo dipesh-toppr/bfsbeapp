@@ -15,7 +15,6 @@ import (
 func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
-		fmt.Println(id)
 		if e != nil {
 			return
 		}
@@ -24,33 +23,49 @@ func SearchTeacher(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "you are not allowed to book session!", http.StatusBadRequest)
 			return
 		}
-		tim, err := managers.ValidateTime(w, r)
-		if err != nil {
-			return
-		}
-		//check for already booking at this time
-		if managers.IsAlreadyBooked(uint(id), tim) {
-			http.Error(w, "you have already booked a session at this time", http.StatusBadRequest)
-			return
-		}
-		//check for available slot at time tim
-		slot, err := managers.AvailSlot(tim)
+		date, err := managers.ValidateTime(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		//book the slot
-		bookid, err := managers.BookSlot(uint(id), uint(slot))
+		//check for available slot at this date
+		slots, err := managers.AvailSlot(date)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		//send booking id to the user
-		msg := "booking ID : " + fmt.Sprint(bookid)
-		w.Write([]byte(msg))
+		json.NewEncoder(w).Encode(slots)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+}
+
+//book the session
+func BookSession(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id, e := token.Parsetoken(w, r)
+		fmt.Println(id)
+		if e != nil {
+			return
+		}
+		sid := r.URL.Query()["sid"][0]
+		SlotId, err := strconv.Atoi(sid)
+		if err != nil {
+			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
+		}
+		BookingId, err := managers.BookSlot(uint(id), uint(SlotId))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		//send booking id to the user
+		msg := "booking ID : " + fmt.Sprint(BookingId)
+		json.NewEncoder(w).Encode(msg)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 }
 
 //delete booked slot
@@ -82,11 +97,10 @@ func DeleteBooking(w http.ResponseWriter, r *http.Request) {
 func ReadBooking(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
-		fmt.Println(id)
 		if e != nil {
 			return
 		}
-		slot, ok := managers.ReadBooked(r)
+		slot, ok := managers.ReadBooked(uint(id), r)
 		if !ok {
 			http.Error(w, "not found", http.StatusBadRequest)
 			return

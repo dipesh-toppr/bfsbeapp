@@ -28,6 +28,7 @@ func LoadRoutes() {
 	http.HandleFunc("/search-teacher", controllers.SearchTeacher)
 	http.HandleFunc("/delete-booking", controllers.DeleteBooking)
 	http.HandleFunc("/read-booking", controllers.ReadBooking)
+	http.HandleFunc("/book-session", controllers.BookSession)
 
 	//admin disable
 	http.HandleFunc("/admin", controllers.Admin)
