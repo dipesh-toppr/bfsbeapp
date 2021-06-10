@@ -15,19 +15,23 @@ func Signup(response http.ResponseWriter, request *http.Request) {
 		validparams, err := managers.ValidateUserFormSignup(request, response)
 
 		if err != nil {
-			response.Write([]byte(err.Error()))
+			http.Error(response, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		user, err := managers.SaveUser(validparams)
 
 		if err != nil {
-			response.Write([]byte(err.Error()))
 			http.Error(response, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		token.Createtoken(user, response)
+		err = token.Createtoken(user, response)
+
+		if err != nil {
+			return
+		}
+
 		response.WriteHeader(http.StatusOK)
 		response.Write([]byte("SignUp Successful"))
 		return
@@ -64,8 +68,12 @@ func Login(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		// add token to cookies
-		token.Createtoken(user, response)
+		err = token.Createtoken(user, response)
+
+		if err != nil {
+			return
+		}
+
 		response.WriteHeader(http.StatusOK)
 		response.Write([]byte("Login Successful"))
 		return
