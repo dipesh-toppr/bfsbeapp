@@ -69,6 +69,7 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 		//user authentication
 		id, e := token.Parsetoken(w, r)
 		slotId := r.FormValue("slot_id")
+		date := r.FormValue("date")
 		newSlot, _ := strconv.Atoi(r.FormValue("new_slot"))
 		if e != nil {
 			return
@@ -86,12 +87,12 @@ func UpdateSlot(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "you can only update your slots", http.StatusBadRequest)
 			return
 		}
-		_, err := managers.FindSlotWithInfo(w, int(teachID), newSlot)
+		_, err := managers.FindSlotWithInfo(w, int(teachID), newSlot, date)
 		if err == nil {
 			http.Error(w, "Slot already exists", http.StatusBadRequest)
 			return
 		}
-		er := managers.UpdateSlot(w, slotId, newSlot)
+		er := managers.UpdateSlot(w, slotId, date, newSlot)
 		if er != nil {
 			return
 		}

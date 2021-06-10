@@ -83,7 +83,7 @@ func Admin(w http.ResponseWriter, r *http.Request) {
 //admin read all bookings
 
 func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
+	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
@@ -115,7 +115,7 @@ func ReadAllBookings(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
+	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
@@ -149,7 +149,7 @@ func ReadAllTeachers(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReadAllStudents(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
+	if r.Method == http.MethodGet {
 		id, e := token.Parsetoken(w, r)
 		fmt.Println(id)
 
