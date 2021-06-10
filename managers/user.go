@@ -2,93 +2,60 @@ package managers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/mail"
 	"strconv"
+	"strings"
 
 	"github.com/dipesh-toppr/bfsbeapp/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SaveUser create new user entry.
-func SaveUser(r *http.Request) (models.User, error) {
+// check validity of user form form signup api
+func ValidateUserFormSignup(request *http.Request, response http.ResponseWriter) (map[string]interface{}, error) {
 
-	// Get form values and validate
-	user, err := validateUserForm(r)
+	validparams := map[string]interface{}{}
 
-	if err != nil {
-		return user, err
+	email := trim(request.FormValue("email"))
+	password := trim(request.FormValue("password"))
+	confirmpassword := trim(request.FormValue("cpassword"))
+	firstname := trim(request.FormValue("firstname"))
+	lastname := trim(request.FormValue("lastname"))
+	identity := trim(request.FormValue("identity"))
+
+	if email == "" || password == "" || firstname == "" {
+		return validparams, errors.New("fields cannot be empty")
 	}
-
-	bs, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.MinCost)
-
-	if err != nil {
-		return user, errors.New("the provided password is not valid")
-	}
-
-	user.Password = string(bs)
-
-	if Database.Create(&user).Error != nil {
-		return user, errors.New("unable to process registration")
-	}
-	return user, nil
-}
-
-// ValidateForm validates the submitted form for registration
-func validateUserForm(request *http.Request) (models.User, error) {
-
-	user := models.User{}
-	email := request.FormValue("email")
-	password := request.FormValue("password")
-	confirmpassword := request.FormValue("cpassword")
-	firstname := request.FormValue("firstname")
-	lastname := request.FormValue("lastname")
-
-	identity := request.FormValue("identity")
 
 	if password != confirmpassword {
-		return user, errors.New("password does not match")
+		return validparams, errors.New("password does not match")
 	}
 
-	if email == "" || password == "" || confirmpassword == "" || identity == "" {
-		return user, errors.New("fields cannot be empty")
+	if identity != models.IDENTITY["teacher"] || identity != models.IDENTITY["student"] {
+		return validparams, errors.New("wrong identity passed")
 	}
 
 	if !valid(email) {
-		return user, errors.New("email is not valid")
-	}
-	_, err := CheckUser(email)
-
-	if err != nil {
-		return user, err
+		return validparams, errors.New("email is not valid")
 	}
 
-	user.Email = email
-	user.Firstname = firstname
-	user.Lastname = lastname
-	user.Password = password
-	user.Identity, _ = strconv.Atoi(identity)
-	user.Isdisabled = false
+	_, exists := FindUser(email)
 
-	return user, nil
+	if exists {
+		return validparams, errors.New("email is already taken")
+	}
 
+	validparams["Email"] = email
+	validparams["Firstname"] = firstname
+	validparams["Lastname"] = lastname
+	validparams["Password"] = password
+	validparams["Identity"], _ = strconv.Atoi(identity)
+	validparams["Isdisabled"] = false
+
+	return validparams, nil
 }
 
-// CheckUser looks for existing user using email
-func CheckUser(email string) (models.User, error) {
-
-	user, ok := FindUser(email)
-
-	if ok {
-		return user, errors.New("email is already taken")
-	}
-
-	return user, nil
-
-}
-
-// FindUser looks for registerd user by email.
+// looks for registerd user by email.
 func FindUser(email string) (models.User, bool) {
 
 	user := models.User{}
@@ -101,6 +68,79 @@ func FindUser(email string) (models.User, bool) {
 
 }
 
+// SaveUser create new user entry.
+func SaveUser(validparams map[string]interface{}) (models.User, error) {
+
+	bctyptpassword, err := bcrypt.GenerateFromPassword([]byte(validparams["password"].(string)), bcrypt.MinCost)
+
+	if err != nil {
+		return models.User{}, errors.New("the provided password is not valid")
+	}
+
+	validparams["password"] = string(bctyptpassword)
+	user, err := CreateUser(validparams)
+
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
+// create new user
+func CreateUser(validparams map[string]interface{}) (models.User, error) {
+
+	user := models.User{}
+	user.Email = validparams["Email"].(string)
+	user.Firstname = validparams["Firstname"].(string)
+	user.Lastname = validparams["Lastname"].(string)
+	user.Password = validparams["Password"].(string)
+	user.Identity = validparams["Identity"].(int)
+	user.Isdisabled = validparams["Isdisabled"].(bool)
+
+	if Database.Create(&user).Error != nil {
+		return user, errors.New("unable to process registration")
+	}
+
+	return user, nil
+}
+
+// check validity of user form form login api
+func ValidateUserFormLogin(request *http.Request, response http.ResponseWriter) (map[string]interface{}, error) {
+
+	validparams := map[string]interface{}{}
+
+	email := trim(request.FormValue("email"))
+	password := trim(request.FormValue("password"))
+
+	if email == "" || password == "" {
+		return validparams, errors.New("fields cannot be empty")
+	}
+
+	if !valid(email) {
+		return validparams, errors.New("email is not valid")
+	}
+
+	validparams["Email"] = email
+	validparams["Password"] = password
+
+	return validparams, nil
+}
+
+// ValidatePassword validates the input password against the one in the database.
+func ValidatePassword(user models.User, password string) bool {
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+
+	return err == nil
+
+}
+
+// trim if any space in input
+func trim(params string) string {
+	return strings.TrimSpace(params)
+}
+
+// find user by id
 func FindUserFromId(id string) (models.User, bool) {
 
 	user := models.User{}
@@ -114,9 +154,8 @@ func FindUserFromId(id string) (models.User, bool) {
 
 }
 
+// check if user is disabled by admin or not
 func IsDisabled(user models.User) (bool, error) {
-
-	fmt.Print(user.Isdisabled)
 
 	if user.Isdisabled {
 		return true, errors.New("user is disabled  by admin")
@@ -125,23 +164,16 @@ func IsDisabled(user models.User) (bool, error) {
 	return false, nil
 }
 
-// ValidatePassword validates the input password against the one in the database.
-func ValidatePassword(user models.User, password string) bool {
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-
-	return err == nil
-
-}
-
 //find the type of user
 func UserType(uid uint) int {
+
 	var user models.User
 	Database.Where("id = ?", uid).Find(&user)
+
 	return user.Identity
 }
 
-// check validity of the email.
+// check validity of the email
 func valid(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil

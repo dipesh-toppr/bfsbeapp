@@ -1,38 +1,35 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/dipesh-toppr/bfsbeapp/managers"
-	"github.com/dipesh-toppr/bfsbeapp/models"
 	"github.com/dipesh-toppr/bfsbeapp/token"
 )
 
 // Signup allows the user to create an account.
 func Signup(response http.ResponseWriter, request *http.Request) {
 
-	// var u models.User
-	// process form submission
 	if request.Method == http.MethodPost {
-		var user models.User
-		user, err := managers.SaveUser(request)
+
+		validparams, err := managers.ValidateUserFormSignup(request, response)
+
 		if err != nil {
-			http.Error(response, err.Error(), http.StatusBadRequest)
-			fmt.Println("SignUp Failed")
+			response.Write([]byte(err.Error()))
 			return
 		}
 
-		// add token to cookies
+		user, err := managers.SaveUser(validparams)
+
+		if err != nil {
+			response.Write([]byte(err.Error()))
+			http.Error(response, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		token.Createtoken(user, response)
 		response.WriteHeader(http.StatusOK)
-
-		fmt.Println(user)
 		response.Write([]byte("SignUp Successful"))
-		fmt.Println("SignUp Successful")
-
-		// redirect
-		// http.Redirect(w, r, "/", http.StatusOK)
 		return
 	}
 }
@@ -40,43 +37,37 @@ func Signup(response http.ResponseWriter, request *http.Request) {
 // Login allows registered user to access the application.
 func Login(response http.ResponseWriter, request *http.Request) {
 
-	// var u models.User
-	// process form submission
 	if request.Method == http.MethodPost {
 
-		password := request.FormValue("password")
-		email := request.FormValue("email")
+		validparams, err := managers.ValidateUserFormLogin(request, response)
+
+		if err != nil {
+			http.Error(response, err.Error(), http.StatusNotFound)
+			return
+		}
 
 		// check if the user exists
-		user, ok := managers.FindUser(email)
+		user, ok := managers.FindUser(validparams["Email"].(string))
 		if !ok {
-			http.Error(response, "username and/or password do not match", http.StatusForbidden)
-			fmt.Println("Logined Failed")
+			http.Error(response, "username and/or password do not match", http.StatusNotFound)
 			return
 		}
 
 		disable, _ := managers.IsDisabled(user)
 		if disable {
-			// http.Error(w, err.Error(), http.StatusForbidden)
 			http.Error(response, "user is disabled by admin....", http.StatusForbidden)
-			fmt.Println("user is disabled by admin....")
 			return
 		}
 
-		if !managers.ValidatePassword(user, password) {
+		if !managers.ValidatePassword(user, validparams["Password"].(string)) {
 			http.Error(response, "username and/or password do not match", http.StatusForbidden)
-			fmt.Println("Logined Failed")
 			return
 		}
 
 		// add token to cookies
 		token.Createtoken(user, response)
 		response.WriteHeader(http.StatusOK)
-
 		response.Write([]byte("Login Successful"))
-		fmt.Println("Login Successful")
-
-		// http.Redirect(w, r, "/", http.StatusOK)
 		return
 	}
 
@@ -91,8 +82,7 @@ func Logout(response http.ResponseWriter, request *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
-	response.Write([]byte("LogOut Successful"))
-	fmt.Println("LogOut Successful")
 	response.WriteHeader(http.StatusOK)
+	response.Write([]byte("LogOut Successful"))
 
 }
