@@ -100,3 +100,23 @@ func FindBookingAndDelete(bid uint, sid uint) error {
 	}
 	return nil
 }
+
+//fetch all slots
+
+func FetchAllSlot(id uint) ([]models.Slot, error) {
+	var booked []models.Booked
+	var slot []models.Slot
+	result1 := Database.Where("student_id = ?", id).Find(&booked)
+	if result1.Error != nil {
+		return slot, errors.New("not found any booking")
+	}
+	var slotid []uint
+	for _, val := range booked {
+		slotid = append(slotid, val.SlotId)
+	}
+	result2 := Database.Find(&slot, slotid)
+	if result2.Error != nil {
+		return slot, errors.New("not found any booking")
+	}
+	return slot, nil
+}

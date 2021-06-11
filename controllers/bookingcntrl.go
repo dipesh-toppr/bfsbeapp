@@ -109,3 +109,22 @@ func ReadBooking(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+//read all bookings of a user
+
+func ReadAllBooking(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id, e := token.Parsetoken(w, r)
+		if e != nil {
+			return
+		}
+		slots, err := managers.FetchAllSlot(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(slots)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+}
