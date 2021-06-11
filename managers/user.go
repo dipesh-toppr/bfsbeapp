@@ -31,10 +31,9 @@ func ValidateUserFormSignup(request *http.Request, response http.ResponseWriter)
 		return validparams, errors.New("password does not match")
 	}
 
-	if identity != models.IDENTITY["teacher"] && identity != models.IDENTITY["student"] {
+	if identity != models.IDENTITY["teacher"] && identity != models.IDENTITY["student"] && identity != models.IDENTITY["admin"] && identity != models.IDENTITY["superadmin"] {
 		return validparams, errors.New("wrong identity passed")
 	}
-
 	if !valid(email) {
 		return validparams, errors.New("email is not valid")
 	}

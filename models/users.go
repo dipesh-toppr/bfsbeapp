@@ -11,6 +11,8 @@ type User struct {
 }
 
 var IDENTITY = map[string]string{
-	"teacher": "0",
-	"student": "1",
+	"teacher":    "0",
+	"student":    "1",
+	"admin":      "2",
+	"superadmin": "3",
 }
